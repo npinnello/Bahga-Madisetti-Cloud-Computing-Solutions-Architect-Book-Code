@@ -1,53 +1,48 @@
-'''
-MIT License
-
-Copyright (c) 2019 Arshdeep Bahga and Vijay Madisetti
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-'''
-
 import MySQLdb
-DB_USERNAME = 'root'
-DB_PASSWORD = 'password'
-# DB_NAME = 'photogallerydb'
-DB_NAME = 'team-9-rds'  # Make sure it matches exactly
-PUBLIC_IPv4_ADDRESS = '18.224.60.115'
+
+
+DB_USERNAME = 'admin'  # Must match the RDS username
+DB_PASSWORD = 't3am9masterpsswd'  # Ensure this is correct
+DB_NAME = 'team-9-rds'  # Use the exact database name
 RDS_HOSTNAME = 'team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com'
-RDS_USERNAME = 'admin'
 
-conn = MySQLdb.connect(host = "team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com",
-                        passwd = 't3am9masterpsswd',
-                        db = 'team_9_rds', 
-                        port = 3306)
 
-cursor = conn.cursor ()
-cursor.execute ("SELECT VERSION()")
+try:
+    conn = MySQLdb.connect(
+        host=RDS_HOSTNAME,
+        user=DB_USERNAME,
+        passwd=DB_PASSWORD,
+        db=DB_NAME,
+        port=3306
+    )
+    print("✅ Connected to MySQL RDS successfully!")
 
-cursor.execute ("CREATE TABLE photogallery2 ( \
-    PhotoID int PRIMARY KEY NOT NULL AUTO_INCREMENT, \
-    CreationTime TEXT NOT NULL, \
-    Title TEXT NOT NULL, \
-    Description TEXT NOT NULL, \
-    Tags TEXT NOT NULL, \
-    URL TEXT NOT NULL,\
-    EXIF TEXT NOT NULL\
-    );")
+    cursor = conn.cursor()
 
-cursor.close ()
-conn.close ()
+ 
+    cursor.execute("SELECT VERSION();")
+    version = cursor.fetchone()
+    print(f"MySQL Server Version: {version[0]}")
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS photogallery2 (
+            PhotoID INT AUTO_INCREMENT PRIMARY KEY,
+            CreationTime DATETIME NOT NULL,
+            Title VARCHAR(255) NOT NULL,
+            Description TEXT NOT NULL,
+            Tags VARCHAR(255) NOT NULL,
+            URL TEXT NOT NULL,
+            EXIF TEXT NOT NULL
+        );
+    """)
+    
+    print("✅ Table `photogallery2` created (if not exists)")
+
+    cursor.close()
+    conn.close()
+    print("✅ Database connection closed.")
+
+except MySQLdb.OperationalError as e:
+    print(f"❌ MySQL Connection Error: {e}")
+except MySQLdb.Error as e:
+    print(f"❌ MySQL Error: {e}")
