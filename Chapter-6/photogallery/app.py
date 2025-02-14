@@ -140,11 +140,11 @@ def search_page():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT * FROM photogallerydb.photogallery2 WHERE Title LIKE %s
+        SELECT * FROM team_9_rds.photogallery2 WHERE Title LIKE %s
         UNION 
-        SELECT * FROM photogallerydb.photogallery2 WHERE Description LIKE %s
+        SELECT * FROM team_9_rds.photogallery2 WHERE Description LIKE %s
         UNION 
-        SELECT * FROM photogallerydb.photogallery2 WHERE Tags LIKE %s;
+        SELECT * FROM team_9_rds.photogallery2 WHERE Tags LIKE %s;
     """, (f"%{query}%", f"%{query}%", f"%{query}%"))
 
     results = cursor.fetchall()
