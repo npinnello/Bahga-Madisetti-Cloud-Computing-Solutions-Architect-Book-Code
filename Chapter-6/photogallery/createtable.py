@@ -33,7 +33,7 @@ RDS_USERNAME = 'admin'
 
 conn = MySQLdb.connect(host = "team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com",
                         passwd = 't3am9masterpsswd',
-                        db = 'team-9-rds', 
+                        db = 'team_9_rds', 
                         port = 3306)
 
 cursor = conn.cursor ()
