@@ -26,7 +26,7 @@ import MySQLdb
 DB_USERNAME = 'root'
 DB_PASSWORD = 'password'
 # DB_NAME = 'photogallerydb'
-DB_NAME = 'team_9_rds'  # Make sure it matches exactly
+DB_NAME = 'team-9-rds'  # Make sure it matches exactly
 PUBLIC_IPv4_ADDRESS = '18.224.60.115'
 RDS_HOSTNAME = 'team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com'
 RDS_USERNAME = 'admin'
