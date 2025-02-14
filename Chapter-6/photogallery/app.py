@@ -32,7 +32,7 @@ BUCKET_NAME="photogallery-bucket-422"
 DB_HOSTNAME="team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com"
 DB_USERNAME = 'admin'
 DB_PASSWORD = 't3am9masterpsswd'
-DB_NAME = 'team-9-rds'
+DB_NAME = 'team_9_rds'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
