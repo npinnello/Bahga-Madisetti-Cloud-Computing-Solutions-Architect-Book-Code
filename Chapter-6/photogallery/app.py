@@ -68,7 +68,7 @@ def home_page():
     conn = MySQLdb.connect(host=DB_HOSTNAME, user=DB_USERNAME, passwd=DB_PASSWORD, db=DB_NAME, port=3306)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM photogallerydb.photogallery2;")
+    cursor.execute("SELECT * FROM team_9_rds.photogallery2;")
     results = cursor.fetchall()
 
     items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
@@ -104,7 +104,7 @@ def add_photo():
             cursor = conn.cursor()
 
             # ✅ Fixed SQL Injection Risk (Parameterized Query)
-            statement = """INSERT INTO photogallerydb.photogallery2 
+            statement = """INSERT INTO team_9_rds.photogallery2 
                            (CreationTime, Title, Description, Tags, URL, EXIF) 
                            VALUES (%s, %s, %s, %s, %s, %s);"""
             cursor.execute(statement, (timestamp, title, description, tags, uploadedFileURL, json.dumps(ExifData)))
@@ -121,7 +121,7 @@ def view_photo(photoID):
     conn = MySQLdb.connect(host=DB_HOSTNAME, user=DB_USERNAME, passwd=DB_PASSWORD, db=DB_NAME, port=3306)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM photogallerydb.photogallery2 WHERE PhotoID=%s;", (photoID,))
+    cursor.execute("SELECT * FROM team_9_rds.photogallery2 WHERE PhotoID=%s;", (photoID,))
     results = cursor.fetchall()
 
     items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5], "ExifData": json.loads(item[6])} for item in results]
