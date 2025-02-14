@@ -1,3 +1,4 @@
+USE team_9_rds;
 CREATE TABLE department (
     number VARCHAR(50) NOT NULL PRIMARY KEY,
     name VARCHAR(200) NULL
