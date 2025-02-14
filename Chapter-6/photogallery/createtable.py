@@ -3,7 +3,7 @@ import MySQLdb
 
 DB_USERNAME = 'admin'  # Must match the RDS username
 DB_PASSWORD = 't3am9masterpsswd'  # Ensure this is correct
-DB_NAME = 'team-9-rds'  # Use the exact database name
+DB_NAME = 'team_9_rds'  # Use the exact database name
 RDS_HOSTNAME = 'team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com'
 
 
