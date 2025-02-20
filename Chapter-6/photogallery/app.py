@@ -26,7 +26,7 @@ AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
 
 # ✅ Use your correct S3 bucket name
-BUCKET_NAME="photogallery-bucket-422"
+BUCKET_NAME="team-9-photostorage-bucket"
 
 # ✅ RDS Configuration (Make sure to use your correct DB credentials)
 DB_HOSTNAME="team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com"
@@ -59,7 +59,6 @@ def s3uploading(filename, filenameWithPath):
     print(path_filename)
 
     s3.upload_file(filenameWithPath, bucket, path_filename)
-    s3.put_object_acl(ACL='public-read', Bucket=bucket, Key=path_filename)
 
     return f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{path_filename}"
 
@@ -140,11 +139,11 @@ def search_page():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT * FROM photogallerydb.photogallery2 WHERE Title LIKE %s
+        SELECT * FROM team_9_rds.photogallery2 WHERE Title LIKE %s
         UNION 
-        SELECT * FROM photogallerydb.photogallery2 WHERE Description LIKE %s
+        SELECT * FROM team_9_rds.photogallery2 WHERE Description LIKE %s
         UNION 
-        SELECT * FROM photogallerydb.photogallery2 WHERE Tags LIKE %s;
+        SELECT * FROM team_9_rds.photogallery2 WHERE Tags LIKE %s;
     """, (f"%{query}%", f"%{query}%", f"%{query}%"))
 
     results = cursor.fetchall()
