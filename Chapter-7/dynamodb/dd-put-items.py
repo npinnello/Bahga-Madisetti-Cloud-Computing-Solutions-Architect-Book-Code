@@ -39,7 +39,7 @@ reader = csv.reader(open("customers.csv","r"))
 header=reader.next()
 
 for row in reader:
-    print row
+    print (row)
     item = table.put_item(
         Item={
         	"customerID":row[0],

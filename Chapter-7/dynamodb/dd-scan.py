@@ -41,19 +41,19 @@ table = dynamodb.Table('customers')
 
 #Describe table
 response = client.describe_table(TableName='customers')
-print response
+print (response)
 
 #Scan table
 response=table.scan()
 items = response['Items']
 for item in items:
-    print item
+    print (item)
 
 #Scan table with filter
 response = table.scan(FilterExpression=Attr('country').eq('India'))
 items = response['Items']
 for item in items:
-    print item
+    print (item)
 
 #Scan table with filters
 response = table.scan(
@@ -61,11 +61,11 @@ response = table.scan(
 					'2013-03-26T00:00:00-00:00'))
 items = response['Items']
 for item in items:
-    print item
+    print (item)
 
 #Query table with partition key
 response = table.query(
 	KeyConditionExpression=Key('customerID').eq('1623072020799'))
 items = response['Items']
 for item in items:
-    print item
+    print (item)

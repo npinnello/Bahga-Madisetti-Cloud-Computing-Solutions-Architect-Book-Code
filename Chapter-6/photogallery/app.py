@@ -68,7 +68,7 @@ def home_page():
     conn = MySQLdb.connect(host=DB_HOSTNAME, user=DB_USERNAME, passwd=DB_PASSWORD, db=DB_NAME, port=3306)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM photogallerydb.photogallery2;")
+    cursor.execute("SELECT * FROM team_9_rds;") #changed db name
     results = cursor.fetchall()
 
     items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
