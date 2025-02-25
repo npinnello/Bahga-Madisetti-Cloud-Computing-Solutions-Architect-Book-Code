@@ -82,7 +82,7 @@ def s3uploading(filename, filenameWithPath):
                        
     bucket = BUCKET_NAME
     path_filename = "photos/" + filename
-    print path_filename
+    print (path_filename)
     s3.upload_file(filenameWithPath, bucket, path_filename)  
     s3.put_object_acl(ACL='public-read', 
                 Bucket=bucket, Key=path_filename)
@@ -108,12 +108,12 @@ def add_photo():
         tags = request.form['tags']
         description = request.form['description']
 
-        print title,tags,description
+        print (title,tags,description)
         if file and allowed_file(file.filename):
             filename = file.filename
             filenameWithPath = os.path.join(UPLOAD_FOLDER, 
                                         filename)
-            print filenameWithPath
+            print (filenameWithPath)
             file.save(filenameWithPath)
             uploadedFileURL = s3uploading(filename, 
                                         filenameWithPath);
