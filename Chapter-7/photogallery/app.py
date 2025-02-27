@@ -93,7 +93,7 @@ def login():
             } for item in items]
 
             print(formatted_items)
-            return render_template('index.html', photos=formatted_items)
+            return render_template('home.html', photos=formatted_items)
         else:
             # Invalid credentials
             return render_template('index.html', error="Invalid username or password")
