@@ -93,7 +93,7 @@ def login():
             } for item in items]
 
             print(formatted_items)
-            return render_template('home.html', photos=formatted_items)
+            return render_template('index.html', photos=formatted_items)
         else:
             # Invalid credentials
             return render_template('index.html', error="Invalid username or password")
@@ -196,4 +196,4 @@ def download_image(image_name):
                 return "Error failed to download", response.status_code
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=8080)
+    app.run(debug=True, host="0.0.0.0", port=5001)
