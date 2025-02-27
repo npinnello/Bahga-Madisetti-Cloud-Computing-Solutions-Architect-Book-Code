@@ -21,14 +21,11 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 REGION="us-east-2"
 BUCKET_NAME="team9-photostorage-bucket-project2"
 
-DB_HOSTNAME = ""
-DB_USERNAME = ""
-DB_PASSWORD = ""
-DB_NAME = ""
-
+# AWS connection to s3 and dynamoDB
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb', region_name=REGION)
 
+# Connect to specific dynamoDB table
 table = dynamodb.Table('photo_gallery')
 
 def allowed_file(filename):
