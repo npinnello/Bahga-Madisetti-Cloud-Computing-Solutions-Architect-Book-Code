@@ -41,15 +41,9 @@ app = Flask(__name__, static_url_path="")
 
 UPLOAD_FOLDER = os.path.join(app.root_path,'media')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-AWS_ACCESS_KEY="AKIATNVEVPSK6OCSSZSX"
-AWS_SECRET_KEY="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"
-REGION="us-east-2"
-BUCKET_NAME="team9-photostorage-bucket-project2"
 
-DB_HOSTNAME="team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com"
-DB_USERNAME = 'admin'
-DB_PASSWORD = 't3am9masterpsswd'
-DB_NAME = 'team_9_rds'
+
+
 
 dynamodb = boto3.resource('dynamodb', aws_access_key_id=AWS_ACCESS_KEY,
                             aws_secret_access_key=AWS_SECRET_KEY,
