@@ -1,73 +1,82 @@
 <!DOCTYPE html>
-<html lang="en" class="no-js">
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>Photo Gallery</title>
-<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link href='https://fonts.googleapis.com/css?family=Roboto:100,400,700,500,300,300italic' rel='stylesheet' type='text/css'>
-<link href='https://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
-<link href="/assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
-<link href="/assets/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
-<link href="/assets/plugins/et-line/et-line.css" rel="stylesheet" type="text/css"/>
-<link href="/assets/plugins/themify/themify.css" rel="stylesheet" type="text/css"/>
-<link href="/assets/plugins/cubeportfolio/css/cubeportfolio.min.css" rel="stylesheet" type="text/css"/>
-<link href="/assets/css/global.css" rel="stylesheet" type="text/css"/>
-
-<!-- Changed three lines below -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-<img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
-
-<script type="text/javascript" src="/assets/plugins/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f3f4f6;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .form-group input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .login-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-<div class="wrapper">
-    <div class="bg-color-sky-light">
-    <br>
-    <center><h2>Photo Gallery</h2>
-    <br>
-    <a href="/">Home</a> | <a href="/add">Add Photo</a><br><br>
-<div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                        <div class="blog-grid-content">
-<form  method='get' action="/search">
-                            <input type="text" name="query" id="query" class="form-control" placeholder="Search photos">
-                        </div>
-                </div>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
             </div>
-        </div>
-    </center>
-        <div class="content-sm container">
-            <div class="theme-portfolio">
-                <div id="portfolio-4-col-grid" class="cbp">
-                    {% for p in photos %}
-                    <div class="cbp-item idea web-design theme-portfolio-item-v2 theme-portfolio-item-xs">
-                        <div class="cbp-caption">
-                            <div class="cbp-caption-defaultWrap theme-portfolio-active-wrap">
-                                <img src="{{p.URL}}" alt="">
-                                <div class="theme-icons-wrap theme-portfolio-lightbox">
-                                    <a class="cbp-lightbox" href="{{p.URL}}" data-title="Portfolio">
-                                        <i class="theme-icons theme-icons-white-bg theme-icons-sm radius-3 icon-focus"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="theme-portfolio-title-heading">
-                            <h4 class="theme-portfolio-title"><a href="/{{p.PhotoID}}">{{p.Title}}</a></h4>
-                            <span class="theme-portfolio-subtitle">{{p.CreationTime}}</span>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
             </div>
-        </div>
-    </div>   
-</div>
-<script type="text/javascript" src="/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="/assets/plugins/cubeportfolio/js/jquery.cubeportfolio.min.js"></script>
-<script type="text/javascript" src="/assets/scripts/app.js"></script>
-<script type="text/javascript" src="/assets/scripts/portfolio/portfolio-4-col-grid.js"></script>
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+    </div>
 </body>
 </html>
