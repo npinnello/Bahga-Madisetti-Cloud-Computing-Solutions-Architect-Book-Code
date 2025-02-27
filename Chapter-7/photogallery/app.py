@@ -16,8 +16,8 @@ app = Flask(__name__, static_url_path="")
 
 UPLOAD_FOLDER = os.path.join(app.root_path,'media')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-AWS_ACCESS_KEY="secret"
-AWS_SECRET_KEY="secret"
+#AWS_ACCESS_KEY="secret"
+#AWS_SECRET_KEY="secret"
 REGION="us-east-2"
 BUCKET_NAME="team9-photostorage-bucket-project2"
 
@@ -26,9 +26,10 @@ DB_USERNAME = ""
 DB_PASSWORD = ""
 DB_NAME = ""
 
-dynamodb = boto3.resource('dynamodb', aws_access_key_id=AWS_ACCESS_KEY,
-                            aws_secret_access_key=AWS_SECRET_KEY,
-                            region_name=REGION)
+s3 = boto3.client('s3')
+dynamodb = boto3.resource('dynamodb', region_name=REGION)
+
+# dynamodb = boto3.resource('dynamodb', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=REGION)
 
 table = dynamodb.Table('photo_gallery')
 
@@ -61,8 +62,7 @@ def getExifData(path_name):
     return ExifData
 
 def s3uploading(filename, filenameWithPath):
-    s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY,
-                      aws_secret_access_key=AWS_SECRET_KEY)
+    #s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY,aws_secret_access_key=AWS_SECRET_KEY)
 
     bucket = BUCKET_NAME
     path_filename = "photos/" + filename
