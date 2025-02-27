@@ -21,10 +21,7 @@ AWS_SECRET_KEY="secret"
 REGION="us-east-2"
 BUCKET_NAME="team9-photostorage-bucket-project2"
 
-DB_HOSTNAME="team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com"
-DB_USERNAME = 'admin'
-DB_PASSWORD = 't3am9masterpsswd'
-DB_NAME = 'team_9_rds'
+
 
 
 dynamodb = boto3.resource('dynamodb', aws_access_key_id=AWS_ACCESS_KEY,
