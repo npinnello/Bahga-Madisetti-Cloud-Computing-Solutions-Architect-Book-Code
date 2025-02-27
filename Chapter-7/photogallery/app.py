@@ -16,10 +16,16 @@ app = Flask(__name__, static_url_path="")
 
 UPLOAD_FOLDER = os.path.join(app.root_path,'media')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-AWS_ACCESS_KEY="secret"
-AWS_SECRET_KEY="secret"
+AWS_ACCESS_KEY="AKIATNVEVPSK6OCSSZSX"
+AWS_SECRET_KEY="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"
 REGION="us-east-2"
 BUCKET_NAME="team9-photostorage-bucket-project2"
+
+DB_HOSTNAME="team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com"
+DB_USERNAME = 'admin'
+DB_PASSWORD = 't3am9masterpsswd'
+DB_NAME = 'team_9_rds'
+
 
 dynamodb = boto3.resource('dynamodb', aws_access_key_id=AWS_ACCESS_KEY,
                             aws_secret_access_key=AWS_SECRET_KEY,
@@ -57,16 +63,19 @@ def getExifData(path_name):
 
 def s3uploading(filename, filenameWithPath):
     s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY,
-                            aws_secret_access_key=AWS_SECRET_KEY)
+                      aws_secret_access_key=AWS_SECRET_KEY)
 
     bucket = BUCKET_NAME
     path_filename = "photos/" + filename
-    print(path_filename)
+    print(f"Uploading to S3: {path_filename}")
+
+    # Upload file to S3
     s3.upload_file(filenameWithPath, bucket, path_filename)
-    s3.put_object_acl(ACL='public-read',
-                Bucket=bucket, Key=path_filename)
-    return "http://"+BUCKET_NAME+\
-        ".s3-website-us-east-1.amazonaws.com/"+ path_filename
+
+    # Construct the S3 URL (public if bucket policy allows it)
+    file_url = f"https://{BUCKET_NAME}.s3.us-east-2.amazonaws.com/{path_filename}"
+    return file_url
+
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -126,22 +135,20 @@ def add_photo():
             file.save(filenameWithPath)
             uploadedFileURL = s3uploading(filename, filenameWithPath)
             ExifData=getExifData(filenameWithPath)
-            ts=time.time()
-            timestamp = datetime.datetime.\
-                        fromtimestamp(ts).\
-                        strftime('%Y-%m-%d %H:%M:%S')
+        ts = time.time()
+        timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
-            table.put_item(
+        table.put_item(
             Item={
-                    "PhotoID": str(int(ts*1000)),
-                    "CreationTime": timestamp,
-                    "Title": title,
-                    "Description": description,
-                    "Tags": tags,
-                    "URL": uploadedFileURL,
-                    "ExifData": json.dumps(ExifData)
-                }
-            )
+                "photo_id": str(int(ts * 1000)),  # ✅ Ensure correct primary key name
+                "creation_time": timestamp,
+                "title": title,
+                "description": description,
+                "tags": tags,
+                "url": uploadedFileURL,
+                "exif_data": json.dumps(ExifData)  # Optional: Ensure key matches expected format
+            }
+        )
 
         return redirect('/')
     else:
@@ -174,7 +181,7 @@ def search_page():
 
 @app.route('/download/<path:image_name>')
 def download_image(image_name):
-        image_url = f"https://{BUCKET_NAME}.s3.us-east-2.amazonaws.com/photos/{image_name}"
+        image_url = f"http://{BUCKET_NAME}.s3.us-east-2.amazonaws.com/photos/{image_name}"
 
         response = requests.get(image_url, stream = True)
 
