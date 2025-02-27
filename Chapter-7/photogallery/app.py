@@ -13,8 +13,8 @@ app = Flask(__name__, static_url_path="", static_folder="static", template_folde
 
 UPLOAD_FOLDER = os.path.join(app.root_path,'media')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-AWS_ACCESS_KEY="secret"
-AWS_SECRET_KEY="secret"
+AWS_ACCESS_KEY="AKIATNVEVPSKVP4QH2LN"
+AWS_SECRET_KEY="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"
 REGION="us-east-2"
 BUCKET_NAME="team9-photostorage-bucket-project2"
 
@@ -92,8 +92,7 @@ def add_photo():
                                         filename)
             print (filenameWithPath)
             file.save(filenameWithPath)
-            uploadedFileURL = s3uploading(filename, 
-                                        filenameWithPath);
+            uploadedFileURL = s3uploading(filename, filenameWithPath)
             ExifData=getExifData(filenameWithPath)
             ts=time.time()
             timestamp = datetime.datetime.\
@@ -129,8 +128,7 @@ def view_photo(photoID):
     tags=items[0]['Tags'].split(',')
     exifdata=json.loads(items[0]['ExifData'])
 
-    return render_template('photodetail.html', 
-            photo=items[0], tags=tags, exifdata=exifdata)
+    return render_template('photodetail.html', photo=items[0], tags=tags, exifdata=exifdata)
 
 @app.route('/search', methods=['GET'])
 def search_page():
@@ -142,8 +140,7 @@ def search_page():
                         Attr('Tags').contains(str(query))
     )
     items = response['Items']
-    return render_template('search.html', 
-            photos=items, searchquery=query)
+    return render_template('search.html', photos=items, searchquery=query)
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5001)

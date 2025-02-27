@@ -28,7 +28,7 @@ import csv
 
 AWS_KEY="<enter>"
 AWS_SECRET="<enter>"
-REGION="us-east-1"
+REGION="us-east-2"
 
 dynamodb = boto3.resource('dynamodb', aws_access_key_id=AWS_KEY,
                             aws_secret_access_key=AWS_SECRET,
