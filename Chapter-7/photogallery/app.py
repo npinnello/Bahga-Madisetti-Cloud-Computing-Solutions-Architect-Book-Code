@@ -57,16 +57,18 @@ def getExifData(path_name):
 
 def s3uploading(filename, filenameWithPath):
     s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY,
-                            aws_secret_access_key=AWS_SECRET_KEY)
+                      aws_secret_access_key=AWS_SECRET_KEY)
 
     bucket = BUCKET_NAME
     path_filename = "photos/" + filename
-    print(path_filename)
+    print(f"Uploading to S3: {path_filename}")
+
+    # Upload file to S3
     s3.upload_file(filenameWithPath, bucket, path_filename)
-    s3.put_object_acl(ACL='public-read',
-                Bucket=bucket, Key=path_filename)
-    return "http://"+BUCKET_NAME+\
-        ".s3-website-us-east-1.amazonaws.com/"+ path_filename
+
+    # Construct the S3 URL (public if bucket policy allows it)
+    file_url = f"https://{BUCKET_NAME}.s3.us-east-2.amazonaws.com/{path_filename}"
+    return file_url
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -133,13 +135,13 @@ def add_photo():
 
             table.put_item(
             Item={
-                    "PhotoID": str(int(ts*1000)),
-                    "CreationTime": timestamp,
-                    "Title": title,
-                    "Description": description,
-                    "Tags": tags,
-                    "URL": uploadedFileURL,
-                    "ExifData": json.dumps(ExifData)
+                    "photo_id": str(int(ts*1000)),  # ✅ Ensure correct primary key name
+                    "creation_time": timestamp,
+                    "title": title,
+                    "description": description,
+                    "tags": tags,
+                    "url": uploadedFileURL,
+                    "exif_data": json.dumps(ExifData)  
                 }
             )
 
