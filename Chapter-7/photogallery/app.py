@@ -16,8 +16,8 @@ app = Flask(__name__, static_url_path="")
 
 UPLOAD_FOLDER = os.path.join(app.root_path,'media')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-AWS_ACCESS_KEY="AKIATNVEVPSK6OCSSZSX"
-AWS_SECRET_KEY="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"
+AWS_ACCESS_KEY="secret"
+AWS_SECRET_KEY="secret"
 REGION="us-east-2"
 BUCKET_NAME="team9-photostorage-bucket-project2"
 
