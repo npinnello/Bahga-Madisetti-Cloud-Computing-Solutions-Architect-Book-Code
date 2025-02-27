@@ -70,8 +70,8 @@ def s3uploading(filename, filenameWithPath):
 @app.route('/', methods=['GET', 'POST'])
 def login():
     # Hardcoded credentials for testing
-    HARDCODED_USERNAME = "Se422"
-    HARDCODED_PASSWORD = "aws123"
+    HARDCODED_USERNAME = "User"
+    HARDCODED_PASSWORD = "root"
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -150,6 +150,35 @@ def add_photo():
     else:
         return render_template('form.html')
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if True:
+            # Successful login
+            response = table.scan()
+            items = response['Items']
+
+            # Format the items as needed
+            formatted_items = [{
+                "photo_id": item.get("photo_id", "N/A"),  # Handle missing attributes
+                "creation_time": item.get("creation_time", "N/A"),
+                "title": item.get("title", "No Title"),
+                "description": item.get("description", "No Description"),
+                "tags": item.get("tags", []),
+                "url": item.get("url", "#")
+            } for item in items]
+
+            print(formatted_items)
+            return render_template('home.html', photos=formatted_items)
+        else:
+            # Invalid credentials
+            return render_template('index.html', error="Invalid username or password")
+    else:
+        # Render login page for GET requests
+        return render_template('index.html')
 
 @app.route('/search', methods=['GET'])
 def search_page():
