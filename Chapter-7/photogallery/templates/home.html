@@ -51,9 +51,13 @@
 <body>
     <h1>Photo Gallery</h1>
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search by title...">
+        <form action="/search" method="get">
+            <input type="text" name="query" placeholder="Search by title...">
+            <button type="submit">Search</button>
+        </form>
     </div>
     <a href="/add">Add Photo</a>
+    <a href="/home">Home</a>
     <div class="photo-container">
         {% for photo in photos %}
         <div class="photo-card">

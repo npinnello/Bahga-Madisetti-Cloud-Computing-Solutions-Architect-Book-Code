@@ -108,7 +108,7 @@ def home_page():
     items = response['Items']
     print(items)
 
-    return render_template('index.html', photos=items)
+    return render_template('home.html', photos=items)
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_photo():
@@ -146,9 +146,26 @@ def add_photo():
                 }
             )
 
-        return redirect('/')
+        return redirect('/home')
     else:
         return render_template('form.html')
+
+
+@app.route('/search', methods=['GET'])
+def search_page():
+    query = request.args.get('query', None)    
+    
+    if query:
+        response = table.scan(
+            FilterExpression=Attr('title').contains(query)
+        )
+        items = response['Items']
+    else:
+        items = []
+
+    return render_template('home.html', photos=items, searchquery=query)
+
+
 
 @app.route('/<int:photoID>', methods=['GET'])
 def view_photo(photoID):
@@ -163,17 +180,7 @@ def view_photo(photoID):
 
     return render_template('photodetail.html', photo=items[0], tags=tags, exifdata=exifdata)
 
-@app.route('/search', methods=['GET'])
-def search_page():
-    query = request.args.get('query', None)    
-    
-    response = table.scan(
-        FilterExpression=Attr('Title').contains(str(query)) | 
-                        Attr('Description').contains(str(query)) | 
-                        Attr('Tags').contains(str(query))
-    )
-    items = response['Items']
-    return render_template('search.html', photos=items, searchquery=query)
+
 
 @app.route('/download/<path:image_name>')
 def download_image(image_name):
