@@ -21,6 +21,11 @@ AWS_SECRET_KEY="secret"
 REGION="us-east-2"
 BUCKET_NAME="team9-photostorage-bucket-project2"
 
+DB_HOSTNAME = ""
+DB_USERNAME = ""
+DB_PASSWORD = ""
+DB_NAME = ""
+
 dynamodb = boto3.resource('dynamodb', aws_access_key_id=AWS_ACCESS_KEY,
                             aws_secret_access_key=AWS_SECRET_KEY,
                             region_name=REGION)
@@ -70,6 +75,36 @@ def s3uploading(filename, filenameWithPath):
     file_url = f"https://{BUCKET_NAME}.s3.us-east-2.amazonaws.com/{path_filename}"
     return file_url
 
+# @app.route('/', methods=['GET', 'POST'])
+# def login():
+#     # Hardcoded credentials for testing
+#     HARDCODED_USERNAME = "Se422"
+#     HARDCODED_PASSWORD = "aws123"
+
+#     if request.method == 'POST':
+#         username = request.form.get('username')
+#         password = request.form.get('password')
+
+#         if username == HARDCODED_USERNAME and password == HARDCODED_PASSWORD:
+#             # Successful login
+#             conn = MySQLdb.connect(host=DB_HOSTNAME, user=DB_USERNAME, passwd=DB_PASSWORD, db=DB_NAME, port=3306)
+#             cursor = conn.cursor()
+
+#             cursor.execute("SELECT * FROM photo_gallery.team9-photostorage-bucket-project2;")
+#             results = cursor.fetchall()
+
+#             items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
+
+#             conn.close()
+#             print(items)
+#             return render_template('home.html', photos=items)
+#         else:
+#             # Invalid credentials
+#             return render_template('index.html', error="Invalid username or password")
+#     else:
+#         # Render login page for GET requests
+#         return render_template('index.html')
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     # Hardcoded credentials for testing
@@ -82,17 +117,21 @@ def login():
 
         if username == HARDCODED_USERNAME and password == HARDCODED_PASSWORD:
             # Successful login
-            conn = MySQLdb.connect(host=DB_HOSTNAME, user=DB_USERNAME, passwd=DB_PASSWORD, db=DB_NAME, port=3306)
-            cursor = conn.cursor()
+            response = table.scan()
+            items = response['Items']
 
-            cursor.execute("SELECT * FROM photo_gallery.team9-photostorage-bucket-project2;")
-            results = cursor.fetchall()
+            # Format the items as needed
+            formatted_items = [{
+                "PhotoID": item["PhotoID"],
+                "CreationTime": item["CreationTime"],
+                "Title": item["Title"],
+                "Description": item["Description"],
+                "Tags": item["Tags"],
+                "URL": item["URL"]
+            } for item in items]
 
-            items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
-
-            conn.close()
-            print(items)
-            return render_template('home.html', photos=items)
+            print(formatted_items)
+            return render_template('home.html', photos=formatted_items)
         else:
             # Invalid credentials
             return render_template('index.html', error="Invalid username or password")
