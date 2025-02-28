@@ -10,14 +10,19 @@ import boto3
 import pymysql
 import requests
 from boto3.dynamodb.conditions import Attr
+from pymongo import MongoClient
 pymysql.install_as_MySQLdb()
 import MySQLdb
 app = Flask(__name__, static_url_path="")
 
+client = MongoClient("mongodb://team9Project2:Somethingeasy@docdb-2025-02-28-00-52-35.cluster-czawg22s2orh.us-east-2.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false")
+db = client.photo_gallery
+photos_collection = db.photos
+
 UPLOAD_FOLDER = os.path.join(app.root_path,'media')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-#AWS_ACCESS_KEY="secret"
-#AWS_SECRET_KEY="secret"
+AWS_ACCESS_KEY="AKIATNVEVPSK6OCSSZSX"
+AWS_SECRET_KEY="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"
 REGION="us-east-2"
 BUCKET_NAME="team9-photostorage-bucket-project2"
 
