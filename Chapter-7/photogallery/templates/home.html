@@ -1,81 +1,95 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photo Gallery</title>
-    <style>
-        .photo-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            padding: 20px;
-        }
-        .photo-card {
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 15px;
-            width: 200px;
-            text-align: center;
-        }
-        .photo-card img {
-            max-width: 100%;
-            border-radius: 8px;
-        }
-        .photo-card h3 {
-            margin: 10px 0;
-            font-size: 18px;
-        }
-        .photo-card p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #555;
-        }
-        .photo-card .tags {
-            font-size: 12px;
-            color: #888;
-        }
-	.search-bar {
-            margin: 20px;
-            text-align: center;
-        }
-        .search-bar input {
-            padding: 10px;
-            width: 300px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Photo Gallery</title>
+  <meta name="viewport" content="width=device-width, 
+      minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="/assets/plugins/bootstrap/css/bootstrap.min.css" 
+      rel="stylesheet" type="text/css" />
+  <link href="/assets/plugins/font-awesome/css/font-awesome.min.css" 
+        rel="stylesheet" type="text/css" />
+  <link href="/assets/plugins/themify/themify.css" 
+        rel="stylesheet" type="text/css" />
+  <link href="/assets/plugins/cubeportfolio/css/cubeportfolio.min.css" 
+        rel="stylesheet" type="text/css" />
+  <link href="/assets/css/global.css" rel="stylesheet" type="text/css"/>
+  <script type="text/javascript" src="/assets/plugins/jquery.min.js">
+  </script>
 </head>
+
 <body>
-    <h1>Photo Gallery</h1>
-      <div class="search-bar">
-        <form action="/search" method="get">
-            <input type="text" name="query" placeholder="Search by title...">
-            <button type="submit">Search</button>
-        </form>
-    </div>
-    <a href="/add">Add Photo</a>
-    <a href="/home">Home</a>
-    <div class="photo-container">
-        {% for photo in photos %}
-        <div class="photo-card">
-            <a href="{{ photo.url }}">
-                <img src="{{ photo.url }}" alt="{{ photo.title }}">
-            </a>
-            <h3>{{ photo.title }}</h3>
-            <p>{{ photo.description }}</p>
-            <p><strong>Photo ID:</strong> {{ photo.photo_id }}</p>
-            <p><strong>Created:</strong> {{ photo.creation_time }}</p>
-            <div class="tags">
-                <strong>Tags:</strong>
-                {% for tag in photo.tags %}
-                    <span>{{ tag }}</span>
-                {% endfor %}
+  <div class="wrapper">
+    <div class="bg-color-sky-light">
+      <br>
+      <center>
+        <h2>Photo Gallery</h2>
+        <br>
+        <a href="/home">Home</a> | <a href="/add">Add Photo</a> | <a href="/download</a> Download <br><br>
+
+        <div class="container">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="blog-grid-content">
+                <form method='get' action="/search">
+                  <input type="text" name="query" id="query" 
+                  class="form-control" placeholder="Search photos">
+              </div>
             </div>
+          </div>
         </div>
-        {% endfor %}
+      </center>
+
+      <div class="content-sm container">
+        <div class="theme-portfolio">
+          <div id="portfolio-4-col-grid" class="cbp">
+            {% for p in photos %}
+            <div class="cbp-item idea web-design theme-portfolio-item-v2 
+              theme-portfolio-item-xs">
+              <div class="cbp-caption">
+                <div class="cbp-caption-defaultWrap 
+                  theme-portfolio-active-wrap">
+                  <img src="{{p.URL}}" alt="">
+                  <div class="theme-icons-wrap theme-portfolio-lightbox">
+                    <a class="cbp-lightbox" href="{{p.URL}}" 
+                      data-title="Portfolio">
+                      <i class="theme-icons theme-icons-white-bg 
+                        theme-icons-sm radius-3 icon-focus"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div class="theme-portfolio-title-heading">
+                <h4 class="theme-portfolio-title">
+                  <a href="/{{p.PhotoID}}">{{p.Title}}</a>
+                </h4>
+                <span class="theme-portfolio-subtitle">
+                {{p.CreationTime}}</span>
+              </div>
+            </div>
+                </div>
+                <a href="/download/{{p.URL.split('/')[-1]}}" class="btn btn-primary btn-sm" style="margin-top: 5px;">
+                Download
+                </a>
+            </div>
+            {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+  <script type="text/javascript" 
+    src="/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
+  <script type="text/javascript" 
+    src="/assets/plugins/cubeportfolio/js/jquery.cubeportfolio.min.js">
+  </script>
+  <script type="text/javascript" 
+    src="/assets/scripts/app.js"></script>
+  <script type="text/javascript" 
+    src="/assets/scripts/portfolio/portfolio-4-col-grid.js"></script>
 </body>
 </html>
+

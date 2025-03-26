@@ -154,6 +154,5 @@ def search_page():
     print(items)
     return render_template('search.html', photos=items, searchquery=query)
 
-# ✅ Run Flask on Port 80 for AWS EC2
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=8080)
+    app.run(host='0.0.0.0', port=8080, debug=True)
