@@ -28,8 +28,8 @@ def get_db_connection():
     try:
         # For local development with Cloud SQL Proxy
         return pymysql.connect(
-            host='127.0.0.1',
-            port=3306,
+            # host='127.0.0.1',
+            # port=3306,
             user=DB_USER,
             password=DB_PASSWORD,  # Make sure this is set
             db=DB_NAME,
