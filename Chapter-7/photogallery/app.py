@@ -1,30 +1,8 @@
-'''
-MIT License
-
-Copyright (c) 2019 Arshdeep Bahga and Vijay Madisetti
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-'''
-
 #!flask/bin/python
 from flask import Flask, jsonify, abort, request, make_response, url_for, render_template, redirect, Response
 from urllib.parse import quote
+from google.cloud import storage
+from werkzeug.utils import secure_filename
 import os
 import time
 import datetime
@@ -40,10 +18,10 @@ UPLOAD_FOLDER = os.path.join(app.root_path,'media')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 # Google Cloud SQL configuration
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
-DB_CONNECTION_NAME = os.getenv("DB_CONNECTION_NAME")
+DB_USER = "root"
+DB_PASSWORD = ""
+DB_NAME = "se-422-photo-gallery"
+DB_CONNECTION_NAME = "se4220hw3:us-central1:photo-gallery-db"
 
 # Function to establish connection with Google Cloud SQL
 def get_db_connection():
@@ -127,6 +105,53 @@ def create_user():
     return render_template('create-user.html')
 
 
+# @app.route('/add', methods=['GET', 'POST'])
+# def add_photo():
+#     if request.method == 'POST':
+#         file = request.files['imagefile']
+#         title = request.form['title']
+#         tags = request.form['tags']
+#         description = request.form['description']
+
+#         if file and allowed_file(file.filename):
+#             filename = file.filename
+#             filenameWithPath = os.path.join(UPLOAD_FOLDER, filename)
+#             file.save(filenameWithPath)
+#             ExifData = getExifData(filenameWithPath)
+#             ts = time.time()
+#             timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
+#             conn = get_db_connection()
+#             cursor = conn.cursor()
+#             cursor.execute(
+#                 "INSERT INTO photo (CreationTime, Title, Description, Tags, URL, ExifData) VALUES (%s, %s, %s, %s, %s, %s)",
+#                 (timestamp, title, description, tags, "GCS_URL", json.dumps(ExifData))
+#             )
+#             conn.commit()
+#             conn.close()
+#         return redirect('/')
+#     else:
+#         return render_template('form.html')
+
+def upload_to_gcs(file):
+    """Uploads a file to Google Cloud Storage"""
+    if not file or not allowed_file(file.filename):
+        return None
+    
+    # Initialize GCS client
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(os.getenv("BUCKET_NAME"))
+    
+    # Secure filename & upload
+    filename = secure_filename(file.filename)
+    blob = bucket.blob(f"photos/{filename}")
+    blob.upload_from_string(
+        file.read(),
+        content_type=file.content_type
+    )
+    blob.make_public()
+    return blob.public_url
+
 @app.route('/add', methods=['GET', 'POST'])
 def add_photo():
     if request.method == 'POST':
@@ -136,24 +161,24 @@ def add_photo():
         description = request.form['description']
 
         if file and allowed_file(file.filename):
-            filename = file.filename
-            filenameWithPath = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(filenameWithPath)
-            ExifData = getExifData(filenameWithPath)
+            # Upload to Cloud Storage
+            public_url = upload_to_gcs(file)
+            if not public_url:
+                abort(400, "Invalid file type")
+
+            # Save to Cloud SQL
             ts = time.time()
             timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            ExifData = getExifData(file.stream)  # Modify to read from file object
 
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO photo (CreationTime, Title, Description, Tags, URL, ExifData) VALUES (%s, %s, %s, %s, %s, %s)",
-                (timestamp, title, description, tags, "GCS_URL", json.dumps(ExifData))
-            )
+            cursor.execute("INSERT INTO photo (CreationTime, Title, Description, Tags, URL, ExifData) VALUES (%s, %s, %s, %s, %s, %s)",
+                (timestamp, title, description, tags, public_url, json.dumps(ExifData)))
             conn.commit()
             conn.close()
-        return redirect('/')
-    else:
-        return render_template('form.html')
+            return redirect('/')
+    return render_template('form.html')
 
 @app.route('/<int:photoID>', methods=['GET'])
 def view_photo(photoID):
