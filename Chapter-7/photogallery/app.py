@@ -19,18 +19,26 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 # Google Cloud SQL configuration
 DB_USER = "root"
-DB_PASSWORD = ""
+DB_PASSWORD = "se422"
 DB_NAME = "se-422-photo-gallery"
 DB_CONNECTION_NAME = "se4220hw3:us-central1:photo-gallery-db"
 
 # Function to establish connection with Google Cloud SQL
 def get_db_connection():
-    return pymysql.connect(
-        unix_socket=f"/cloudsql/{DB_CONNECTION_NAME}",
-        user=DB_USER,
-        password=DB_PASSWORD,
-        db=DB_NAME
-    )
+    try:
+        # For local development with Cloud SQL Proxy
+        return pymysql.connect(
+            host='127.0.0.1',
+            port=3306,
+            user=DB_USER,
+            password=DB_PASSWORD,  # Make sure this is set
+            db=DB_NAME,
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
+    except pymysql.Error as e:
+        print(f"Error connecting to MySQL: {e}")
+        raise
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
