@@ -68,14 +68,14 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM user WHERE username = %s", (username,))
+        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
         user = cursor.fetchone()
         conn.close()
 
         if user and user[2] == password :
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM photo;")
+            cursor.execute("SELECT * FROM photos;")
             results = cursor.fetchall()
             conn.close()
 
@@ -97,14 +97,14 @@ def create_user():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM user WHERE username = %s", (username,))
+        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
         user_exists = cursor.fetchone()
         
         if user_exists:
             conn.close()
             return render_template('create-user.html', error="Username already exists.")
         
-        cursor.execute("INSERT INTO user (username, password) VALUES (%s, %s)", (username, password))
+        cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
         conn.commit()
         conn.close()
 
@@ -181,7 +181,7 @@ def add_photo():
 
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO photo (CreationTime, Title, Description, Tags, URL, ExifData) VALUES (%s, %s, %s, %s, %s, %s)",
+            cursor.execute("INSERT INTO photos (CreationTime, Title, Description, Tags, URL, ExifData) VALUES (%s, %s, %s, %s, %s, %s)",
                 (timestamp, title, description, tags, public_url, json.dumps(ExifData)))
             conn.commit()
             conn.close()
@@ -192,7 +192,7 @@ def add_photo():
 def view_photo(photoID):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM photo WHERE PhotoID = %s", (photoID,))
+    cursor.execute("SELECT * FROM photos WHERE PhotoID = %s", (photoID,))
     item = cursor.fetchone()
     conn.close()
 
@@ -208,7 +208,7 @@ def search_page():
     query = request.args.get('query', None)
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM photo WHERE Title LIKE %s OR Description LIKE %s OR Tags LIKE %s", (f'%{query}%', f'%{query}%', f'%{query}%'))
+    cursor.execute("SELECT * FROM photos WHERE Title LIKE %s OR Description LIKE %s OR Tags LIKE %s", (f'%{query}%', f'%{query}%', f'%{query}%'))
     items = cursor.fetchall()
     conn.close()
     return render_template('search.html', photos=items, searchquery=query)
