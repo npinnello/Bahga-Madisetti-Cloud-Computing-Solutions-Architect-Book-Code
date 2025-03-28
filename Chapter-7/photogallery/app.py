@@ -20,7 +20,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 # Google Cloud SQL configuration
 DB_USER = "root"
 DB_PASSWORD = "se422"
-DB_NAME = "photo-gallery"
+DB_NAME = "photo_gallery"
 DB_CONNECTION_NAME = "se4220hw3:us-central1:photo-gallery-db"
 
 # Function to establish connection with Google Cloud SQL
