@@ -65,27 +65,51 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-        user = cursor.fetchone()
-        conn.close()
-
-        if user and user[2] == password :
+        try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM photos;")
-            results = cursor.fetchall()
+
+            # Get user by username
+            cursor.execute("""
+                SELECT user_id, username, password 
+                FROM users 
+                WHERE username = %s
+            """, (username,))
+            
+            user = cursor.fetchone()
             conn.close()
 
-            items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
-            return render_template('home.html', photos=items)
-        else:
-            return render_template('index.html', error="Invalid username or password")
+            # Simple password comparison
+            if user and user['password'] == password:
+                
+                # Get photos for the gallery
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM photos")
+                results = cursor.fetchall()
+                conn.close()
 
-    else:
-        return render_template('index.html')
+                # Prepare photo data for template
+                photos = [{
+                    "PhotoID": item[0],
+                    "CreationTime": item[1],
+                    "Title": item[2], 
+                    "Description": item[3],
+                    "Tags": item[4],
+                    "URL": item[5]
+                } for item in results]
+                
+                return render_template('home.html', photos=photos)
+            
+            return render_template('index.html', 
+                                error="Invalid username or password")
+        
+        except pymysql.Error as e:
+            print(f"Database error: {e}")
+            return render_template('index.html', 
+                                error="Database error occurred. Please try again.")
+    
+    return render_template('index.html')
 
 
 @app.route('/create-user', methods=['GET', 'POST'])
@@ -94,22 +118,38 @@ def create_user():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-        user_exists = cursor.fetchone()
-        
-        if user_exists:
+        # Basic validation
+        if not username or not password:
+            return render_template('create-user.html', 
+                                error="Username and password are required")
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Check if username exists
+            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+            if cursor.fetchone():
+                conn.close()
+                return render_template('create-user.html', 
+                                    error="Username already exists")
+            
+            # Insert new user (plain password storage - not recommended for production)
+            cursor.execute("""
+                INSERT INTO users (username, password)
+                VALUES (%s, %s)
+            """, (username, password))
+            
+            conn.commit()
             conn.close()
-            return render_template('create-user.html', error="Username already exists.")
+            return render_template('index.html', 
+                                message="User created successfully. Please log in.")
         
-        cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
-        conn.commit()
-        conn.close()
-
-        return render_template('index.html', message="User created successfully. Please log in.")
-
+        except pymysql.Error as e:
+            print(f"Database error: {e}")
+            return render_template('create-user.html', 
+                                error="Database error occurred. Please try again.")
+    
     return render_template('create-user.html')
 
 
