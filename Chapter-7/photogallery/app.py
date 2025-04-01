@@ -86,6 +86,8 @@ def login():
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM photos")
                 results = cursor.fetchall()
+                for photo in results:
+                    photo['URL'] = photo['storage_path']  # Alias for template compatibility
                 conn.close()
 
                 return render_template('home.html', photos=results)
@@ -168,8 +170,9 @@ def view_photo(photoID):
     conn.close()
 
     if item:
-        tags = []  # Tags not stored in DB yet
-        exifdata = {}  # Placeholder if you want to fetch ExifData separately
+        item['URL'] = item['storage_path']  # Alias for templates
+        tags = []
+        exifdata = {}
         return render_template('photodetail.html', photo=item, tags=tags, exifdata=exifdata)
     else:
         abort(404)
@@ -182,6 +185,8 @@ def search_page():
     cursor.execute("SELECT * FROM photos WHERE title LIKE %s OR description LIKE %s", 
                    (f"%{query}%", f"%{query}%"))
     items = cursor.fetchall()
+    for item in items:
+        item['URL'] = item['storage_path']  # Alias for template
     conn.close()
     return render_template('search.html', photos=items, searchquery=query)
 
