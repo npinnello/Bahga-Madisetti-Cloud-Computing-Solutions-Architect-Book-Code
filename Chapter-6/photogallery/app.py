@@ -51,9 +51,10 @@ def upload_to_gcs(file):
     filename = secure_filename(file.filename)
     blob = bucket.blob(f"photos/{filename}")
     blob.upload_from_file(file, content_type=file.content_type)
-    blob.make_public()
 
-    return blob.public_url
+    public_url = f"https://storage.googleapis.com/{BUCKET_NAME}/photos/{filename}"
+    return public_url
+
 
 @app.route('/', methods=['GET'])
 def home_page():
