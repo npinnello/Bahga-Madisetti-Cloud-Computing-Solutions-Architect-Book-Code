@@ -136,13 +136,27 @@ def add_photo():
             ExifData = getExifData(file.stream)
             timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO photos (album_id, user_id, title, description, storage_path, upload_date) VALUES (%s, %s, %s, %s, %s, %s)",
-                           (1, 1, title, description, public_url, timestamp))
-            conn.commit()
-            conn.close()
-            return redirect('/')
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("SELECT album_id FROM albums WHERE user_id = %s LIMIT 1", (1,))
+                album = cursor.fetchone()
+
+                if not album:
+                    cursor.execute("INSERT INTO albums (user_id, title, description, created_at) VALUES (%s, %s, %s, %s)",
+                                   (1, 'Default Album', 'Auto-created album', timestamp))
+                    conn.commit()
+                    cursor.execute("SELECT LAST_INSERT_ID() AS album_id")
+                    album = cursor.fetchone()
+
+                cursor.execute("INSERT INTO photos (album_id, user_id, title, description, storage_path, upload_date) VALUES (%s, %s, %s, %s, %s, %s)",
+                               (album['album_id'], 1, title, description, public_url, timestamp))
+                conn.commit()
+                conn.close()
+                return redirect('/')
+            except pymysql.Error as e:
+                print(f"Photo insert failed: {e}")
+                return render_template('form.html', error="Failed to add photo.")
     return render_template('form.html')
 
 @app.route('/<int:photoID>', methods=['GET'])
@@ -154,7 +168,7 @@ def view_photo(photoID):
     conn.close()
 
     if item:
-        tags = item.get('tags', '').split(',') if 'tags' in item else []
+        tags = []  # Tags not stored in DB yet
         exifdata = {}  # Placeholder if you want to fetch ExifData separately
         return render_template('photodetail.html', photo=item, tags=tags, exifdata=exifdata)
     else:
