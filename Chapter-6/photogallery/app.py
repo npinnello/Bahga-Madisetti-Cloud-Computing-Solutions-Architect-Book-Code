@@ -1,13 +1,13 @@
-# !/usr/bin/env python3
-from flask import Flask, jsonify, abort, request, make_response, url_for
-from flask import render_template, redirect
+#!/usr/bin/env python3
+from flask import Flask, jsonify, abort, request, make_response, url_for, render_template, redirect
 import os
 import time
 import datetime
 import exifread
 import json
-import boto3
 import pymysql
+from google.cloud import storage
+from werkzeug.utils import secure_filename
 pymysql.install_as_MySQLdb()
 import MySQLdb
 
@@ -15,13 +15,11 @@ app = Flask(__name__, static_url_path="")
 
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'media')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-BASE_URL = "http://localhost:5000/media/"
-REGION = "us-east-2"
 
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
-AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
-BUCKET_NAME = "team-9-photostorage-bucket"
+# GCP bucket
+BUCKET_NAME = os.getenv("BUCKET_NAME", "se-422-photo-gallery")  # set your bucket name here
 
+# MySQL config (Cloud SQL)
 DB_HOSTNAME = "team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com"
 DB_USERNAME = 'admin'
 DB_PASSWORD = 't3am9masterpsswd'
@@ -43,22 +41,19 @@ def getExifData(path_name):
         tags = exifread.process_file(f)
     return {tag: str(tags[tag]) for tag in tags if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote')}
 
-def s3uploading(filename, filenameWithPath):
-    bucket_name = os.getenv("BUCKET_NAME", "se-422-photo-gallery")  # fallback or override as needed
+def upload_to_gcs(file):
+    if not BUCKET_NAME:
+        raise ValueError("BUCKET_NAME environment variable not set")
 
-    if not bucket_name:
-        raise ValueError("Cannot determine path without bucket name")
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(BUCKET_NAME)
 
-    s3 = boto3.client(
-        's3',
-        aws_access_key_id=AWS_ACCESS_KEY,
-        aws_secret_access_key=AWS_SECRET_KEY
-    )
-    path_filename = "photos/" + filename
-    s3.upload_file(filenameWithPath, bucket_name, path_filename)
+    filename = secure_filename(file.filename)
+    blob = bucket.blob(f"photos/{filename}")
+    blob.upload_from_file(file, content_type=file.content_type)
+    blob.make_public()
 
-    return f"https://{bucket_name}.s3.{REGION}.amazonaws.com/{path_filename}"
-
+    return blob.public_url
 
 @app.route('/', methods=['GET'])
 def home_page():
@@ -79,10 +74,11 @@ def add_photo():
         description = request.form['description']
 
         if file and allowed_file(file.filename):
-            filename = file.filename
-            filenameWithPath = os.path.join(UPLOAD_FOLDER, filename)
+            public_url = upload_to_gcs(file)
+            file.stream.seek(0)  # reset stream for EXIF read
+            filenameWithPath = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(filenameWithPath)
-            uploadedFileURL = s3uploading(filename, filenameWithPath)
+
             ExifData = getExifData(filenameWithPath)
             timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -91,7 +87,7 @@ def add_photo():
             statement = """INSERT INTO photos 
                            (CreationTime, Title, Description, Tags, URL, ExifData) 
                            VALUES (%s, %s, %s, %s, %s, %s);"""
-            cursor.execute(statement, (timestamp, title, description, tags, uploadedFileURL, json.dumps(ExifData)))
+            cursor.execute(statement, (timestamp, title, description, tags, public_url, json.dumps(ExifData)))
             conn.commit()
             conn.close()
         return redirect('/')
