@@ -44,10 +44,21 @@ def getExifData(path_name):
     return {tag: str(tags[tag]) for tag in tags if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote')}
 
 def s3uploading(filename, filenameWithPath):
-    s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
+    bucket_name = os.getenv("BUCKET_NAME", "se-422-photo-gallery")  # fallback or override as needed
+
+    if not bucket_name:
+        raise ValueError("Cannot determine path without bucket name")
+
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id=AWS_ACCESS_KEY,
+        aws_secret_access_key=AWS_SECRET_KEY
+    )
     path_filename = "photos/" + filename
-    s3.upload_file(filenameWithPath, BUCKET_NAME, path_filename)
-    return f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{path_filename}"
+    s3.upload_file(filenameWithPath, bucket_name, path_filename)
+
+    return f"https://{bucket_name}.s3.{REGION}.amazonaws.com/{path_filename}"
+
 
 @app.route('/', methods=['GET'])
 def home_page():
