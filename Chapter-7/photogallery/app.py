@@ -138,8 +138,8 @@ def add_photo():
 
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO photos (CreationTime, Title, Description, Tags, URL, ExifData) VALUES (%s, %s, %s, %s, %s, %s)",
-                           (timestamp, title, description, tags, public_url, json.dumps(ExifData)))
+            cursor.execute("INSERT INTO photos (album_id, user_id, title, description, storage_path, upload_date) VALUES (%s, %s, %s, %s, %s, %s)",
+                           (1, 1, title, description, public_url, timestamp))
             conn.commit()
             conn.close()
             return redirect('/')
@@ -149,13 +149,13 @@ def add_photo():
 def view_photo(photoID):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM photos WHERE PhotoID = %s", (photoID,))
+    cursor.execute("SELECT * FROM photos WHERE photo_id = %s", (photoID,))
     item = cursor.fetchone()
     conn.close()
 
     if item:
-        tags = item['Tags'].split(',')
-        exifdata = json.loads(item['ExifData'])
+        tags = item.get('tags', '').split(',') if 'tags' in item else []
+        exifdata = {}  # Placeholder if you want to fetch ExifData separately
         return render_template('photodetail.html', photo=item, tags=tags, exifdata=exifdata)
     else:
         abort(404)
@@ -165,8 +165,8 @@ def search_page():
     query = request.args.get('query', None)
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM photos WHERE Title LIKE %s OR Description LIKE %s OR Tags LIKE %s", 
-                   (f"%{query}%", f"%{query}%", f"%{query}%"))
+    cursor.execute("SELECT * FROM photos WHERE title LIKE %s OR description LIKE %s", 
+                   (f"%{query}%", f"%{query}%"))
     items = cursor.fetchall()
     conn.close()
     return render_template('search.html', photos=items, searchquery=query)
