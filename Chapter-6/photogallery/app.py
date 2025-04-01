@@ -1,4 +1,4 @@
-#!flask/bin/python
+# !/usr/bin/env python3
 from flask import Flask, jsonify, abort, request, make_response, url_for
 from flask import render_template, redirect
 import os
@@ -13,23 +13,16 @@ import MySQLdb
 
 app = Flask(__name__, static_url_path="")
 
-UPLOAD_FOLDER = os.path.join(app.root_path,'static','media')
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'media')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+BASE_URL = "http://localhost:5000/media/"
+REGION = "us-east-2"
 
-BASE_URL="http://localhost:5000/media/"
-
-# ✅ Corrected AWS Region
-REGION="us-east-2"
-
-# ✅ AWS Credentials are now loaded from environment variables (Set these on EC2)
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
+BUCKET_NAME = "team-9-photostorage-bucket"
 
-# ✅ Use your correct S3 bucket name
-BUCKET_NAME="team-9-photostorage-bucket"
-
-# ✅ RDS Configuration (Make sure to use your correct DB credentials)
-DB_HOSTNAME="team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com"
+DB_HOSTNAME = "team-9-rds.czawg22s2orh.us-east-2.rds.amazonaws.com"
 DB_USERNAME = 'admin'
 DB_PASSWORD = 't3am9masterpsswd'
 DB_NAME = 'team_9_rds'
@@ -48,110 +41,83 @@ def not_found(error):
 def getExifData(path_name):
     with open(path_name, 'rb') as f:
         tags = exifread.process_file(f)
-    ExifData = {tag: str(tags[tag]) for tag in tags.keys() if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote')}
-    return ExifData
+    return {tag: str(tags[tag]) for tag in tags if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote')}
 
-# ✅ Fixed S3 Upload URL
 def s3uploading(filename, filenameWithPath):
     s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
-    bucket = BUCKET_NAME
     path_filename = "photos/" + filename
-    print(path_filename)
-
-    s3.upload_file(filenameWithPath, bucket, path_filename)
-
+    s3.upload_file(filenameWithPath, BUCKET_NAME, path_filename)
     return f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{path_filename}"
 
 @app.route('/', methods=['GET'])
 def home_page():
     conn = MySQLdb.connect(host=DB_HOSTNAME, user=DB_USERNAME, passwd=DB_PASSWORD, db=DB_NAME, port=3306)
     cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM team_9_rds.photogallery2;")
+    cursor.execute("SELECT * FROM photos;")
     results = cursor.fetchall()
-
-    items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
-
     conn.close()
-    print(items)
+    items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
     return render_template('index.html', photos=items)
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_photo():
     if request.method == 'POST':
-        uploadedFileURL = ''
         file = request.files['imagefile']
         title = request.form['title']
         tags = request.form['tags']
         description = request.form['description']
 
-        print(title, tags, description)
-
         if file and allowed_file(file.filename):
             filename = file.filename
             filenameWithPath = os.path.join(UPLOAD_FOLDER, filename)
-            print(filenameWithPath)
             file.save(filenameWithPath)
             uploadedFileURL = s3uploading(filename, filenameWithPath)
             ExifData = getExifData(filenameWithPath)
-            print(ExifData)
-
-            ts = time.time()
-            timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
             conn = MySQLdb.connect(host=DB_HOSTNAME, user=DB_USERNAME, passwd=DB_PASSWORD, db=DB_NAME, port=3306)
             cursor = conn.cursor()
-
-            # ✅ Fixed SQL Injection Risk (Parameterized Query)
-            statement = """INSERT INTO team_9_rds.photogallery2 
-                           (CreationTime, Title, Description, Tags, URL, EXIF) 
+            statement = """INSERT INTO photos 
+                           (CreationTime, Title, Description, Tags, URL, ExifData) 
                            VALUES (%s, %s, %s, %s, %s, %s);"""
             cursor.execute(statement, (timestamp, title, description, tags, uploadedFileURL, json.dumps(ExifData)))
-
             conn.commit()
             conn.close()
-
         return redirect('/')
-    else:
-        return render_template('form.html')
+    return render_template('form.html')
 
 @app.route('/<int:photoID>', methods=['GET'])
 def view_photo(photoID):
     conn = MySQLdb.connect(host=DB_HOSTNAME, user=DB_USERNAME, passwd=DB_PASSWORD, db=DB_NAME, port=3306)
     cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM team_9_rds.photogallery2 WHERE PhotoID=%s;", (photoID,))
-    results = cursor.fetchall()
-
-    items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5], "ExifData": json.loads(item[6])} for item in results]
-
+    cursor.execute("SELECT * FROM photos WHERE PhotoID=%s;", (photoID,))
+    item = cursor.fetchone()
     conn.close()
-    tags = items[0]['Tags'].split(',')
-    exifdata = items[0]['ExifData']
 
-    return render_template('photodetail.html', photo=items[0], tags=tags, exifdata=exifdata)
+    if item:
+        tags = item[4].split(',')
+        exifdata = json.loads(item[6])
+        photo = {
+            "PhotoID": item[0], "CreationTime": item[1], "Title": item[2],
+            "Description": item[3], "Tags": item[4], "URL": item[5], "ExifData": exifdata
+        }
+        return render_template('photodetail.html', photo=photo, tags=tags, exifdata=exifdata)
+    else:
+        abort(404)
 
 @app.route('/search', methods=['GET'])
 def search_page():
-    query = request.args.get('query', None)
-
+    query = request.args.get('query', '')
     conn = MySQLdb.connect(host=DB_HOSTNAME, user=DB_USERNAME, passwd=DB_PASSWORD, db=DB_NAME, port=3306)
     cursor = conn.cursor()
-
     cursor.execute("""
-        SELECT * FROM team_9_rds.photogallery2 WHERE Title LIKE %s
-        UNION 
-        SELECT * FROM team_9_rds.photogallery2 WHERE Description LIKE %s
-        UNION 
-        SELECT * FROM team_9_rds.photogallery2 WHERE Tags LIKE %s;
+        SELECT * FROM photos 
+        WHERE Title LIKE %s OR Description LIKE %s OR Tags LIKE %s;
     """, (f"%{query}%", f"%{query}%", f"%{query}%"))
-
     results = cursor.fetchall()
+    conn.close()
 
     items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5], "ExifData": item[6]} for item in results]
-
-    conn.close()
-    print(items)
     return render_template('search.html', photos=items, searchquery=query)
 
 if __name__ == '__main__':
