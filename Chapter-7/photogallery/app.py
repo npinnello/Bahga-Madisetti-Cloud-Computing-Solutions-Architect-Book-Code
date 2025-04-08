@@ -23,7 +23,7 @@ DB_USER = "root"
 DB_PASSWORD = "se422"
 DB_NAME = "photo_gallery"
 DB_CONNECTION_NAME = "se422proj4:us-central1:photo-gallery-db"
-DB_HOST = "34.41.49.24"
+DB_HOST = "34.58.7.121"
 
 # GCS Configuration
 BUCKET_NAME = os.getenv("BUCKET_NAME", "se-422-photo-gallery")
