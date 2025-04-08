@@ -22,7 +22,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 DB_USER = "root"
 DB_PASSWORD = "se422"
 DB_NAME = "photo_gallery"
-DB_CONNECTION_NAME = "se4220hw3:us-central1:photo-gallery-db"
+DB_CONNECTION_NAME = "se422proj4:us-central1:photo-gallery-db"
 DB_HOST = "34.41.49.24"
 
 # GCS Configuration
