@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from flask import Flask, jsonify, abort, request, make_response, url_for, render_template, redirect, Response, send_from_directory
 from urllib.parse import quote
-# from google.cloud import storage
+from google.cloud import storage
 from werkzeug.utils import secure_filename
 import os
 import time
