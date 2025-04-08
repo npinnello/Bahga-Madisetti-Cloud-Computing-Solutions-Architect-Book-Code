@@ -1,7 +1,6 @@
 Flask==2.2.5
 gunicorn==21.2.0
 pymysql==1.1.0
-MySQL-python==1.2.5
 google-cloud-storage==2.14.0
 exifread==3.0.0
 requests==2.31.0
