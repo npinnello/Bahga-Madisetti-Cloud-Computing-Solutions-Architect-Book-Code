@@ -30,11 +30,11 @@ BUCKET_NAME = os.getenv("BUCKET_NAME", "se-422-photo-gallery")
 
 def get_db_connection():
     try:
+        unix_socket = '/cloudsql/se422proj4:us-central1:photo-gallery-db'
         return pymysql.connect(
-            host=DB_HOST,
-            port=3306,
             user=DB_USER,
             password=DB_PASSWORD,
+            unix_socket=unix_socket,
             db=DB_NAME,
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
@@ -42,6 +42,7 @@ def get_db_connection():
     except pymysql.Error as e:
         print(f"Error connecting to MySQL: {e}")
         raise
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
