@@ -207,10 +207,15 @@ def search_page():
     conn.close()
     return render_template('search.html', photos=items, searchquery=query)
 
+# @app.route('/download/<filename>')
+# def download_file(filename):
+#     """Serve a file from the local UPLOAD_FOLDER."""
+#     return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+
 @app.route('/download/<filename>')
 def download_file(filename):
-    """Serve a file from the local UPLOAD_FOLDER."""
-    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+    """Redirect to the public GCS URL"""
+    return redirect(f"https://storage.googleapis.com/{BUCKET_NAME}/photos/{filename}")
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=8080)
