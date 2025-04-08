@@ -125,6 +125,18 @@ def create_user():
             return render_template('create-user.html', error="Database error occurred. Please try again.")
     return render_template('create-user.html')
 
+@app.route('/home', methods=['GET'])
+def home():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM photo;")
+    results = cursor.fetchall()
+    conn.close()
+
+    items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
+
+    return render_template('home.html', photos=items)
+
 @app.route('/add', methods=['GET', 'POST'])
 def add_photo():
     if request.method == 'POST':
