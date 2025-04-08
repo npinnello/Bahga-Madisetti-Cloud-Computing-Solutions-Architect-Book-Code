@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from flask import Flask, jsonify, abort, request, make_response, url_for, render_template, redirect, Response
+from flask import Flask, jsonify, abort, request, make_response, url_for, render_template, redirect, Response, send_from_directory
 from urllib.parse import quote
-from google.cloud import storage
+# from google.cloud import storage
 from werkzeug.utils import secure_filename
 import os
 import time
@@ -16,6 +16,7 @@ import MySQLdb
 app = Flask(__name__, static_url_path="")
 
 UPLOAD_FOLDER = os.path.join(app.root_path, 'media')
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'media')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 # Google Cloud SQL configuration
@@ -29,19 +30,13 @@ DB_HOST = "34.41.49.24"
 BUCKET_NAME = os.getenv("BUCKET_NAME", "se-422-photo-gallery")
 
 def get_db_connection():
-    try:
-        return pymysql.connect(
-            host=DB_HOST,
-            port=3306,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            db=DB_NAME,
-            charset='utf8mb4',
-            cursorclass=pymysql.cursors.DictCursor
-        )
-    except pymysql.Error as e:
-        print(f"Error connecting to MySQL: {e}")
-        raise
+    return pymysql.connect(
+        #unix_socket=f"/cloudsql/{DB_CONNECTION_NAME}",
+	host = "34.171.171.251",
+        user=DB_USER,
+        password=DB_PASSWORD,
+        db=DB_NAME
+    )
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -124,6 +119,18 @@ def create_user():
             return render_template('create-user.html', error="Database error occurred. Please try again.")
     return render_template('create-user.html')
 
+@app.route('/home', methods=['GET'])
+def home():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM photo;")
+    results = cursor.fetchall()
+    conn.close()
+
+    items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
+
+    return render_template('home.html', photos=items)
+
 @app.route('/add', methods=['GET', 'POST'])
 def add_photo():
     if request.method == 'POST':
@@ -177,18 +184,30 @@ def view_photo(photoID):
     else:
         abort(404)
 
+@app.route('/media/<path:filename>')
+def serve_media(filename):
+    return send_from_directory('media', filename)
+
 @app.route('/search', methods=['GET'])
 def search_page():
     query = request.args.get('query', None)
+    print(f"Search: {query}")
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM photos WHERE title LIKE %s OR description LIKE %s", 
-                   (f"%{query}%", f"%{query}%"))
-    items = cursor.fetchall()
-    for item in items:
-        item['URL'] = item['storage_path']  # Alias for template
+    cursor.execute("SELECT * FROM photo WHERE Title LIKE %s OR Description LIKE %s OR Tags LIKE %s", (f'%{query}%', f'%{query}%', f'%{query}%'))
+   
+        # Fetch the results and convert them to dictionaries
+    columns = [column[0] for column in cursor.description]  # Extract column names
+    items = [dict(zip(columns, row)) for row in cursor.fetchall()]
     conn.close()
+
+    
+    print(f"Found {len(items)} results")
     return render_template('search.html', photos=items, searchquery=query)
 
+@app.route('/download/<filename>')
+def download_file(filename):
+    """Serve a file from the local UPLOAD_FOLDER."""
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=8080)
