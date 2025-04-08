@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from flask import Flask, jsonify, abort, request, make_response, url_for, render_template, redirect, Response
+from flask import Flask, jsonify, abort, request, make_response, url_for, render_template, redirect, Response, send_from_directory
 from urllib.parse import quote
-from google.cloud import storage
+# from google.cloud import storage
 from werkzeug.utils import secure_filename
 import os
 import time
@@ -176,6 +176,10 @@ def view_photo(photoID):
         return render_template('photodetail.html', photo=item, tags=tags, exifdata=exifdata)
     else:
         abort(404)
+        
+@app.route('/media/<path:filename>')
+def serve_media(filename):
+    return send_from_directory('media', filename)
 
 @app.route('/search', methods=['GET'])
 def search_page():
@@ -189,6 +193,11 @@ def search_page():
         item['URL'] = item['storage_path']  # Alias for template
     conn.close()
     return render_template('search.html', photos=items, searchquery=query)
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    """Serve a file from the local UPLOAD_FOLDER."""
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=8080)
