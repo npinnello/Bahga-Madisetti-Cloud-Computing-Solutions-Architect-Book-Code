@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from urllib.request import urlopen
 from flask import Flask, jsonify, abort, request, make_response, url_for, render_template, redirect, Response, send_from_directory
 from urllib.parse import quote
 from google.cloud import storage
@@ -214,8 +215,24 @@ def search_page():
 
 @app.route('/download/<filename>')
 def download_file(filename):
-    """Redirect to the public GCS URL"""
-    return redirect(f"https://storage.googleapis.com/{BUCKET_NAME}/photos/{filename}")
+    """Force download using public URL"""
+    url = f"https://storage.googleapis.com/{BUCKET_NAME}/photos/{filename}"
+    
+    try:
+        remote_file = urlopen(url)
+        data = remote_file.read()
+        
+        response = Response(
+            data,
+            mimetype=remote_file.headers['content-type'],
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Length": remote_file.headers['content-length']
+            }
+        )
+        return response
+    except Exception as e:
+        abort(404)
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=8080)
