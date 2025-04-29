@@ -1,0 +1,95 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('classifieds.home') }}">Ames Classifieds</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="forSaleDropdown" role="button" data-bs-toggle="dropdown">
+                        For Sale
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='for-sale', category='cars-trucks') }}">Cars & Trucks</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='for-sale', category='motorcycles') }}">Motorcycles</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='for-sale', category='boats') }}">Boats</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='for-sale', category='books') }}">Books</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='for-sale', category='furniture') }}">Furniture</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="housingDropdown" role="button" data-bs-toggle="dropdown">
+                        Housing
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='housing', category='apartments') }}">Apartments</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='housing', category='houses') }}">Houses</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='housing', category='rooms') }}">Rooms</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='housing', category='vacation') }}">Vacation Rentals</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='housing', category='office') }}">Office Space</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown">
+                        Services
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='services', category='automotive') }}">Automotive</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='services', category='beauty') }}">Beauty</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='services', category='computer') }}">Computer</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='services', category='creative') }}">Creative</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='services', category='event') }}">Event</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="jobsDropdown" role="button" data-bs-toggle="dropdown">
+                        Jobs
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='jobs', category='accounting') }}">Accounting</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='jobs', category='education') }}">Education</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='jobs', category='food') }}">Food Service</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='jobs', category='healthcare') }}">Healthcare</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='jobs', category='technology') }}">Technology</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="communityDropdown" role="button" data-bs-toggle="dropdown">
+                        Community
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='community', category='activities') }}">Activities</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='community', category='artists') }}">Artists</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='community', category='events') }}">Events</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='community', category='volunteers') }}">Volunteers</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('classifieds.category', section='community', category='lost-found') }}">Lost & Found</a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <ul class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('auth.account') }}">My Account</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('classifieds.my_listings') }}">My Listings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

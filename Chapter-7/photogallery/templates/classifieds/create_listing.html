@@ -1,0 +1,168 @@
+{% extends "classifieds/base.html" %}
+{% block title %}Create New Listing{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('classifieds.home') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('classifieds.category', section=section, category=category) }}">{{ section_name }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('classifieds.category', section=section, category=category) }}">{{ category_name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">New Listing</li>
+            </ol>
+        </nav>
+
+        <h2 class="mb-4">Create New Listing in {{ section_name }} &raquo; {{ category_name }}</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            
+            <div class="card mb-4">
+                <div class="card-header">Basic Information</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control") }}
+                        {% for error in form.title.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.price.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ form.price(class="form-control") }}
+                        </div>
+                        {% for error in form.price.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows=5) }}
+                        {% for error in form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.images.label(class="form-label") }}
+                        {{ form.images(class="form-control", multiple=true) }}
+                        <small class="text-muted">You can upload multiple images (max 5)</small>
+                        {% for error in form.images.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">Location</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.city.label(class="form-label") }}
+                            {{ form.city(class="form-control") }}
+                            {% for error in form.city.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.neighborhood.label(class="form-label") }}
+                            {{ form.neighborhood(class="form-control") }}
+                            {% for error in form.neighborhood.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">Contact Information</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control") }}
+                            {% for error in form.phone.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control") }}
+                            {% for error in form.email.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dynamic fields based on category -->
+            <div class="card mb-4">
+                <div class="card-header">Item Details</div>
+                <div class="card-body">
+                    {% if section == 'for-sale' and category == 'boats' %}
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.year_built.label(class="form-label") }}
+                                {{ form.year_built(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.make_model.label(class="form-label") }}
+                                {{ form.make_model(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.boat_type.label(class="form-label") }}
+                                {{ form.boat_type(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.color.label(class="form-label") }}
+                                {{ form.color(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.condition.label(class="form-label") }}
+                                {{ form.condition(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.length.label(class="form-label") }}
+                                <div class="input-group">
+                                    {{ form.length(class="form-control") }}
+                                    <span class="input-group-text">ft</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% elif section == 'housing' and category == 'apartments' %}
+                        <!-- Apartment specific fields -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.bedrooms.label(class="form-label") }}
+                                {{ form.bedrooms(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.bathrooms.label(class="form-label") }}
+                                {{ form.bathrooms(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.square_feet.label(class="form-label") }}
+                                {{ form.square_feet(class="form-control") }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Post Listing</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

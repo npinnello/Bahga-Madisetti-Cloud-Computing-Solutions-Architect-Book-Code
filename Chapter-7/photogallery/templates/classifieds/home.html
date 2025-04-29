@@ -1,0 +1,103 @@
+{% extends "classifieds/base.html" %}
+{% block title %}Ames Classifieds{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h1 class="text-center mb-4">Ames Classifieds</h1>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('classifieds.search') }}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="q" placeholder="Search classifieds...">
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- For Sale Section -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5>For Sale</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="{{ url_for('classifieds.category', section='for-sale', category='cars-trucks') }}" class="list-group-item list-group-item-action">Cars & Trucks</a>
+                        <a href="{{ url_for('classifieds.category', section='for-sale', category='motorcycles') }}" class="list-group-item list-group-item-action">Motorcycles</a>
+                        <a href="{{ url_for('classifieds.category', section='for-sale', category='boats') }}" class="list-group-item list-group-item-action">Boats</a>
+                        <a href="{{ url_for('classifieds.category', section='for-sale', category='books') }}" class="list-group-item list-group-item-action">Books</a>
+                        <a href="{{ url_for('classifieds.category', section='for-sale', category='furniture') }}" class="list-group-item list-group-item-action">Furniture</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Housing Section -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5>Housing</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="{{ url_for('classifieds.category', section='housing', category='apartments') }}" class="list-group-item list-group-item-action">Apartments</a>
+                        <a href="{{ url_for('classifieds.category', section='housing', category='houses') }}" class="list-group-item list-group-item-action">Houses</a>
+                        <a href="{{ url_for('classifieds.category', section='housing', category='rooms') }}" class="list-group-item list-group-item-action">Rooms</a>
+                        <a href="{{ url_for('classifieds.category', section='housing', category='vacation') }}" class="list-group-item list-group-item-action">Vacation Rentals</a>
+                        <a href="{{ url_for('classifieds.category', section='housing', category='office') }}" class="list-group-item list-group-item-action">Office Space</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Section -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5>Services</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="{{ url_for('classifieds.category', section='services', category='automotive') }}" class="list-group-item list-group-item-action">Automotive</a>
+                        <a href="{{ url_for('classifieds.category', section='services', category='beauty') }}" class="list-group-item list-group-item-action">Beauty</a>
+                        <a href="{{ url_for('classifieds.category', section='services', category='computer') }}" class="list-group-item list-group-item-action">Computer</a>
+                        <a href="{{ url_for('classifieds.category', section='services', category='creative') }}" class="list-group-item list-group-item-action">Creative</a>
+                        <a href="{{ url_for('classifieds.category', section='services', category='event') }}" class="list-group-item list-group-item-action">Event</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jobs Section -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5>Jobs</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="{{ url_for('classifieds.category', section='jobs', category='accounting') }}" class="list-group-item list-group-item-action">Accounting</a>
+                        <a href="{{ url_for('classifieds.category', section='jobs', category='education') }}" class="list-group-item list-group-item-action">Education</a>
+                        <a href="{{ url_for('classifieds.category', section='jobs', category='food') }}" class="list-group-item list-group-item-action">Food Service</a>
+                        <a href="{{ url_for('classifieds.category', section='jobs', category='healthcare') }}" class="list-group-item list-group-item-action">Healthcare</a>
+                        <a href="{{ url_for('classifieds.category', section='jobs', category='technology') }}" class="list-group-item list-group-item-action">Technology</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Section -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5>Community</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="{{ url_for('classifieds.category', section='community', category='activities') }}" class="list-group-item list-group-item-action">Activities</a>
+                        <a href="{{ url_for('classifieds.category', section='community', category='artists') }}" class="list-group-item list-group-item-action">Artists</a>
+                        <a href="{{ url_for('classifieds.category', section='community', category='events') }}" class="list-group-item list-group-item-action">Events</a>
+                        <a href="{{ url_for('classifieds.category', section='community', category='volunteers') }}" class="list-group-item list-group-item-action">Volunteers</a>
+                        <a href="{{ url_for('classifieds.category', section='community', category='lost-found') }}" class="list-group-item list-group-item-action">Lost & Found</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

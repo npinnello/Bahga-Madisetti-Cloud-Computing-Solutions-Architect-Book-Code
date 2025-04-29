@@ -1,0 +1,73 @@
+{% extends "classifieds/base.html" %}
+{% block title %}{{ listing.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('classifieds.home') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('classifieds.category', section=listing.section, category=listing.category) }}">{{ listing.section_name }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('classifieds.category', section=listing.section, category=listing.category) }}">{{ listing.category_name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Listing</li>
+            </ol>
+        </nav>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title">{{ listing.title }}</h2>
+                <p class="card-subtitle mb-2 text-muted">
+                    Posted: {{ listing.created_at.strftime('%b %d, %Y') }} in 
+                    <a href="{{ url_for('classifieds.category', section=listing.section, category=listing.category) }}">
+                        {{ listing.section_name }} &raquo; {{ listing.category_name }}
+                    </a>
+                </p>
+                <p class="card-subtitle mb-2 text-muted">
+                    Location: {{ listing.city }}
+                </p>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="text-primary">${{ listing.price }}</h3>
+                    {% if current_user.is_authenticated and current_user.id == listing.user_id %}
+                        <div>
+                            <a href="{{ url_for('classifieds.edit_listing', listing_id=listing.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <form method="POST" action="{{ url_for('classifieds.delete_listing', listing_id=listing.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    {% if listing.images %}
+                        <img src="{{ url_for('static', filename='uploads/' + listing.images[0].filename) }}" class="img-fluid rounded mb-3" alt="{{ listing.title }}">
+                    {% else %}
+                        <div class="bg-light text-center p-5 mb-3 rounded">
+                            <i class="bi bi-image" style="font-size: 3rem;"></i>
+                            <p class="mt-2">No image available</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <h4>Details</h4>
+                <ul class="list-unstyled">
+                    {% for attr, value in listing.attributes.items() %}
+                        {% if value %}
+                            <li><strong>{{ attr|replace('_', ' ')|title }}:</strong> {{ value }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+
+                <h4 class="mt-4">Description</h4>
+                <p class="card-text">{{ listing.description }}</p>
+
+                <div class="mt-4 border-top pt-3">
+                    <h5>Contact Information</h5>
+                    <p><strong>Phone:</strong> {{ listing.phone }}</p>
+                    <p><strong>Email:</strong> {{ listing.email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

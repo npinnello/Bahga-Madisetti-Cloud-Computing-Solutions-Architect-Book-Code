@@ -1,0 +1,114 @@
+/* Base styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* Navbar styles */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* Card styles */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Category cards */
+.category-card .card-header {
+    font-size: 1.25rem;
+}
+
+/* Listing styles */
+.listing-item {
+    transition: transform 0.2s;
+}
+
+.listing-item:hover {
+    transform: translateY(-2px);
+}
+
+/* Form styles */
+.form-label {
+    font-weight: 500;
+}
+
+/* Price styling */
+.price {
+    font-weight: bold;
+    color: #0d6efd;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0.5rem 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar-nav .dropdown-menu {
+        position: static;
+        float: none;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Custom colors for sections */
+.bg-for-sale {
+    background-color: #0d6efd !important;
+}
+
+.bg-housing {
+    background-color: #198754 !important;
+}
+
+.bg-services {
+    background-color: #0dcaf0 !important;
+}
+
+.bg-jobs {
+    background-color: #ffc107 !important;
+}
+
+.bg-community {
+    background-color: #6c757d !important;
+}
+
+/* Image styling */
+.img-thumbnail {
+    max-height: 200px;
+    object-fit: cover;
+}
+
+/* Alert close button */
+.btn-close:focus {
+    box-shadow: none;
+}
+
+/* Listing attributes */
+.listing-attribute {
+    margin-bottom: 0.5rem;
+}
+
+.listing-attribute strong {
+    display: inline-block;
+    width: 120px;
+}
+
+/* Footer */
+footer {
+    margin-top: 3rem;
+}
