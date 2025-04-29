@@ -136,7 +136,7 @@ def create_listing(section, category):
     # CHANGE ONCE FINAL
     if request.method == 'POST':
         form = request.form
-                attributes = (
+        attributes = (
             session['user_id'], section, category,
             form['title'], form['description'],
             form['year'], form['make'], form['color'],
