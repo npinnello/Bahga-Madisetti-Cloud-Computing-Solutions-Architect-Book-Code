@@ -1,0 +1,30 @@
+<!-- templates/index.html -->
+{% extends "classifieds/base.html" %}
+
+{% block title %}Ames Classifieds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Ames Classifieds</h1>
+    
+    <!-- Search Bar -->
+    <form method="GET" action="/search">
+        <input type="text" name="q" placeholder="Search classifieds...">
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Sections -->
+    {% for section, categories in sections.items() %}
+    <div class="section">
+        <h2>{{ section|replace('-', ' ')|title }}</h2>
+        <div class="categories">
+            {% for category in categories %}
+            <a href="/{{ section }}/{{ category }}">
+                {{ category|replace('-', ' ')|title }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

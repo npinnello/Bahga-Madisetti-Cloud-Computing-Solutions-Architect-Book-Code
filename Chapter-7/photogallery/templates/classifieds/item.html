@@ -1,0 +1,47 @@
+{% extends "classifieds/base.html" %}
+
+{% block title %}{{ item.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('view_section', section=item.section) }}">{{ item.section|replace('-', ' ')|title }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('view_category', section=item.section, category=item.category) }}">{{ item.category|replace('-', ' ')|title }}</a></li>
+            <li class="breadcrumb-item active">Listing</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">{{ item.title }}</h2>
+            <p class="text-muted">Posted on {{ item.created_at.strftime('%Y-%m-%d') }}</p>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h4>Details</h4>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Price:</strong> ${{ item.price }}</li>
+                        <li class="list-group-item"><strong>Condition:</strong> {{ item.item_condition }}</li>
+                        <li class="list-group-item"><strong>Location:</strong> {{ item.city }}</li>
+                        {% if item.year_built %}
+                        <li class="list-group-item"><strong>Year:</strong> {{ item.year_built }}</li>
+                        {% endif %}
+                        {% if item.make_model %}
+                        <li class="list-group-item"><strong>Make/Model:</strong> {{ item.make_model }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h4>Description</h4>
+                    <p>{{ item.description }}</p>
+                    
+                    <h4 class="mt-4">Contact</h4>
+                    <p><strong>Phone:</strong> {{ item.phone }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

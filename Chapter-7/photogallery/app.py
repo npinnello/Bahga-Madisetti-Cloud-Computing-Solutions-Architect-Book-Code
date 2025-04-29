@@ -3,16 +3,22 @@ import pymysql
 import os
 from datetime import datetime
 
-app = Flask(__name__)
+# Initialize Flask app with explicit template folder
+app = Flask(__name__, template_folder='templates')
+app.secret_key = 'your-secret-key-here'  # Required for session management
+app.config['TEMPLATES_AUTO_RELOAD'] = True  # Auto-reload templates during development
 
-# Google Cloud SQL configuration
-DB_USER = "root"
-DB_PASSWORD = "se422"
-DB_NAME = "photo_gallery"
-DB_CONNECTION_NAME = "se422proj4:us-central1:photo-gallery-db"
+# Database configuration
+DB_CONFIG = {
+    'host': 'localhost',  # Default for local development
+    'user': "root",
+    'password': "se422",
+    'database': "photo_gallery",
+    'charset': 'utf8mb4',
+    'cursorclass': pymysql.cursors.DictCursor
+}
 
-
-# Sections & Categories
+# Application sections and categories
 SECTIONS = {
     "for-sale": ["cars-trucks", "motorcycles", "boats", "books", "furniture"],
     "housing": ["apartments", "rooms", "sublets", "parking", "storage"],
@@ -21,16 +27,13 @@ SECTIONS = {
     "community": ["events", "volunteers", "activities", "classes", "lost-found"]
 }
 
-# DB connection
-
 def get_db_connection():
     try:
-        unix_socket = f"/cloudsql/{DB_CONNECTION_NAME}"
         return pymysql.connect(
-            user=DB_USER,
-            password=DB_PASSWORD,
-            unix_socket=unix_socket,
-            db=DB_NAME,
+            host='localhost',
+            user='root',
+            password='se422',
+            database='photo_gallery',
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
@@ -40,131 +43,191 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-    return render_template('index.html', sections=SECTIONS)
+    return render_template('classifieds/index.html', sections=SECTIONS)
+
+@app.route('/login', methods=['POST'])
+def login():
+    """Handle user login"""
+    username = request.form.get('username')
+    password = request.form.get('password')
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT user_id, username, password FROM users WHERE username = %s",
+                    (username,)
+                )
+                user = cursor.fetchone()
+                
+        if user and user['password'] == password:
+            session['user_id'] = user['user_id']
+            return redirect(url_for('home'))
+        return render_template('classifieds/index.html', 
+                            sections=SECTIONS,
+                            error="Invalid username or password")
+    except pymysql.Error as e:
+        print(f"Database error: {e}")
+        return render_template('classifieds/index.html',
+                            sections=SECTIONS,
+                            error="Database error occurred")
+
+@app.route('/home')
+def home():
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+    return render_template('classifieds/home.html', sections=SECTIONS)
 
 @app.route('/create-user', methods=['GET', 'POST'])
 def create_user():
+    """User registration endpoint"""
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
 
         if not username or not password:
-            return render_template('create-user.html', error="Username and password are required")
+            return render_template('classifieds/create-user.html',
+                                error="Username and password are required")
 
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-            if cursor.fetchone():
-                conn.close()
-                return render_template('create-user.html', error="Username already exists")
+            with get_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT * FROM users WHERE username = %s",
+                        (username,)
+                    )
+                    if cursor.fetchone():
+                        return render_template('classifieds/create-user.html',
+                                            error="Username already exists")
 
-            cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
-            conn.commit()
-            conn.close()
-            return render_template('index.html', message="User created successfully. Please log in.")
+                    cursor.execute(
+                        "INSERT INTO users (username, password) VALUES (%s, %s)",
+                        (username, password)
+                    )
+                    conn.commit()
+            
+            return render_template('classifieds/index.html',
+                                sections=SECTIONS,
+                                message="User created successfully. Please log in.")
         except pymysql.Error as e:
             print(f"Database error: {e}")
-            return render_template('create-user.html', error="Database error occurred. Please try again.")
-    return render_template('create-user.html')
+            return render_template('classifieds/create-user.html',
+                                error="Database error occurred")
 
-@app.route('/', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT user_id, username, password FROM users WHERE username = %s", (username,))
-            user = cursor.fetchone()
-            conn.close()
-
-            if user and user['password'] == password:
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                 # CHANGE ONCE FINAL
-                cursor.execute("SELECT * FROM listings")  
-                results = cursor.fetchall()
-                conn.close()
-
-                return render_template('home.html', listings=results)
-
-            return render_template('index.html', error="Invalid username or password")
-        except pymysql.Error as e:
-            print(f"Database error: {e}")
-            return render_template('index.html', error="Database error occurred. Please try again.")
-    return render_template('index.html')
+    return render_template('classifieds/create-user.html')
 
 @app.route('/logout')
 def logout():
+    """Clear user session"""
     session.clear()
     return redirect(url_for('index'))
 
 @app.route('/<section>')
 def view_section(section):
+    """Display all categories in a section"""
     if section not in SECTIONS:
         abort(404)
-    return render_template('section.html', section=section, categories=SECTIONS[section])
+    return render_template('classifieds/section.html',
+                         section=section,
+                         categories=SECTIONS[section])
 
 @app.route('/<section>/<category>')
 def view_category(section, category):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    # CHANGE ONCE FINAL
-    cursor.execute("SELECT * FROM listings WHERE section=%s AND category=%s", (section, category))
-    items = cursor.fetchall()
-    conn.close()
-    return render_template('category.html', section=section, category=category, items=items)
+    """Show listings for a specific category"""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT * FROM listings WHERE section=%s AND category=%s",
+                    (section, category)
+                )
+                items = cursor.fetchall()
+        
+        if not items:
+            flash("No listings found in this category", "info")
+            return redirect(url_for('view_section', section=section))
+            
+        return render_template('classifieds/category.html',
+                            section=section,
+                            category=category,
+                            items=items)
+    except pymysql.Error as e:
+        app.logger.error(f"Database error in view_category: {e}")
+        abort(500)
 
 @app.route('/<section>/<category>/<int:item_id>')
 def view_item(section, category, item_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    # CHANGE ONCE FINAL
-    cursor.execute("SELECT * FROM listings WHERE listing_id=%s", (item_id,))
-    item = cursor.fetchone()
-    conn.close()
-    if not item:
-        abort(404)
-    return render_template('item.html', item=item)
+    """Display single listing details"""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT * FROM listings WHERE listing_id=%s",
+                    (item_id,)
+                )
+                item = cursor.fetchone()
+        
+        if not item or item['section'] != section or item['category'] != category:
+            abort(404)
+            
+        return render_template('classifieds/item.html', item=item)
+    except pymysql.Error as e:
+        print(f"Database error: {e}")
+        abort(500)
 
 @app.route('/create-listing/<section>/<category>', methods=['GET', 'POST'])
 def create_listing(section, category):
+    """Handle new listing creation"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    # CHANGE ONCE FINAL
+    
+    if section not in SECTIONS or category not in SECTIONS[section]:
+        abort(404)
+    
     if request.method == 'POST':
-        form = request.form
-                attributes = (
-            session['user_id'], section, category,
-            form['title'], form['description'],
-            form['year'], form['make'], form['color'],
-            form['item_type'], form['condition'],
-            form['price'], form['city'], form['phone'],
-            datetime.utcnow()
-        )
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO listings 
+                        (user_id, section, category, title, description, 
+                         year_built, make_model, color, item_type, 
+                         item_condition, price, city, phone, created_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        session['user_id'], section, category,
+                        request.form['title'], request.form['description'],
+                        request.form.get('year_built'), request.form.get('make_model'),
+                        request.form.get('color'), request.form.get('item_type'),
+                        request.form.get('condition'), request.form['price'],
+                        request.form['city'], request.form['phone'],
+                        datetime.utcnow()
+                    ))
+                    conn.commit()
+            
+            return redirect(url_for('view_category',
+                                 section=section,
+                                 category=category))
+        except pymysql.Error as e:
+            print(f"Database error: {e}")
+            return render_template('classifieds/create_listing.html',
+                                section=section,
+                                category=category,
+                                error="Database error occurred")
+    
+    return render_template('classifieds/create_listing.html',
+                         section=section,
+                         category=category)
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # CHANGE ONCE FINAL
-        cursor.execute("""
-            INSERT INTO listings
-            (user_id, section, category, title, description, year_built, make_model,
-             color, item_type, item_condition, price, city, phone, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, attributes)
-        conn.commit()
-        conn.close()
-
-        return redirect(url_for('view_category', section=section, category=category))
-
-    return render_template('create_listing.html', section=section, category=category)
-
+@app.errorhandler(500)
+def server_error(error):
+    """500 error handler"""
+    return render_template('classifieds/500.html'), 500
 
 @app.errorhandler(404)
-def not_found(e):
-    return render_template('404.html'), 404
+def not_found(error):
+    """404 error handler"""
+    return render_template('classifieds/404.html'), 404
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080, debug=True)
