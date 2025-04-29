@@ -82,7 +82,7 @@ def view_category(section, category):
     conn = get_db_connection()
     cursor = conn.cursor()
     # TODO: Replace with dynamic table selection based on section (e.g., ForSale, Housing)
-cursor.execute("SELECT * FROM ForSale WHERE Type=%s", (category,))
+    cursor.execute("SELECT * FROM ForSale WHERE Type=%s", (category,))
     items = cursor.fetchall()
     conn.close()
     return render_template('category.html', section=section, category=category, items=items)
@@ -92,7 +92,7 @@ def view_item(section, category, item_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     # TODO: Replace with dynamic lookup based on section table
-cursor.execute("SELECT * FROM ForSale WHERE ID=%s", (item_id,))
+    cursor.execute("SELECT * FROM ForSale WHERE ID=%s", (item_id,))
     item = cursor.fetchone()
     conn.close()
     if not item:
@@ -103,10 +103,10 @@ cursor.execute("SELECT * FROM ForSale WHERE ID=%s", (item_id,))
 def create_listing(section, category):
     if 'username' not in session:
         return redirect(url_for('login'))
-        if request.method == 'POST':
+    if request.method == 'POST':
         form = request.form
         attributes = (
-    category,
+            category,
             form['title'], form['description'],
             form['year'], form['make'], form['color'],
             form['item_type'], form['condition'],
@@ -117,7 +117,7 @@ def create_listing(section, category):
         conn = get_db_connection()
         cursor = conn.cursor()
         # TODO: Adjust INSERT to use correct table like ForSale, Housing, etc.
-cursor.execute("""
+        cursor.execute("""
         INSERT INTO ForSale
         (Type, Title, Description, YearBuilt, MakeModel,
          Color, SubType, ItemCondition, Price, City, PhoneNumber, CreatedAt)
