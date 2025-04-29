@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Listing{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4>Create New Listing in {{ section|title|replace('-', ' ') }} / {{ category|title|replace('-', ' ') }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('create_listing', section=section, category=category) }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="title" class="form-label">Title*</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="price" class="form-label">Price*</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description*</label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="year" class="form-label">Year Built*</label>
+                            <input type="number" class="form-control" id="year" name="year" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="make" class="form-label">Make/Model*</label>
+                            <input type="text" class="form-control" id="make" name="make" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="color" class="form-label">Color*</label>
+                            <input type="text" class="form-control" id="color" name="color" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="item_type" class="form-label">Type*</label>
+                            <input type="text" class="form-control" id="item_type" name="item_type" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="condition" class="form-label">Condition*</label>
+                            <select class="form-select" id="condition" name="condition" required>
+                                <option value="">Select condition</option>
+                                <option value="new">New</option>
+                                <option value="like-new">Like New</option>
+                                <option value="good">Good</option>
+                                <option value="fair">Fair</option>
+                                <option value="poor">Poor</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="city" class="form-label">City*</label>
+                            <input type="text" class="form-control" id="city" name="city" value="Ames" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone Number*</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="images" class="form-label">Images</label>
+                        <input type="file" class="form-control" id="images" name="images" multiple>
+                        <div class="form-text">Upload up to 10 images (JPEG or PNG)</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Post Listing</button>
+                        <a href="{{ url_for('view_category', section=section, category=category) }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

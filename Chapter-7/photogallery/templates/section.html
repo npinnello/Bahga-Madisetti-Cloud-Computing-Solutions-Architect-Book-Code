@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ section|title|replace('-', ' ') }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">{{ section|title|replace('-', ' ') }}</h2>
+
+<div class="row">
+    {% for category in categories %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="{{ url_for('view_category', section=section, category=category) }}">
+                        {{ category|title|replace('-', ' ') }}
+                    </a>
+                </h5>
+                <p class="card-text">Browse all {{ category|title|replace('-', ' ') }} listings in Ames</p>
+                {% if 'user_id' in session %}
+                <a href="{{ url_for('create_listing', section=section, category=category) }}" class="btn btn-sm btn-outline-primary">Post in this category</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
