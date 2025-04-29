@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify, abort
+from flask import Flask, render_template, request, redirect, session, url_for, abort
 import pymysql
 import os
 from datetime import datetime
@@ -11,6 +11,7 @@ DB_PASSWORD = "se422"
 DB_NAME = "photo_gallery"
 DB_CONNECTION_NAME = "se422proj4:us-central1:photo-gallery-db"
 
+# GCS configuration
 
 # Sections & Categories
 SECTIONS = {
@@ -38,36 +39,6 @@ def get_db_connection():
         print(f"MySQL connection error: {e}")
         raise
 
-@app.route('/')
-def index():
-    return render_template('index.html', sections=SECTIONS)
-
-@app.route('/create-user', methods=['GET', 'POST'])
-def create_user():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        if not username or not password:
-            return render_template('create-user.html', error="Username and password are required")
-
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-            if cursor.fetchone():
-                conn.close()
-                return render_template('create-user.html', error="Username already exists")
-
-            cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
-            conn.commit()
-            conn.close()
-            return render_template('index.html', message="User created successfully. Please log in.")
-        except pymysql.Error as e:
-            print(f"Database error: {e}")
-            return render_template('create-user.html', error="Database error occurred. Please try again.")
-    return render_template('create-user.html')
-
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -83,8 +54,7 @@ def login():
             if user and user['password'] == password:
                 conn = get_db_connection()
                 cursor = conn.cursor()
-                 # CHANGE ONCE FINAL
-                cursor.execute("SELECT * FROM listings")  
+                cursor.execute("SELECT * FROM listings")  # CHANGE ONCE FINAL
                 results = cursor.fetchall()
                 conn.close()
 
@@ -111,8 +81,8 @@ def view_section(section):
 def view_category(section, category):
     conn = get_db_connection()
     cursor = conn.cursor()
-    # CHANGE ONCE FINAL
-    cursor.execute("SELECT * FROM listings WHERE section=%s AND category=%s", (section, category))
+    # TODO: Replace with dynamic table selection based on section (e.g., ForSale, Housing)
+cursor.execute("SELECT * FROM ForSale WHERE Type=%s", (category,))
     items = cursor.fetchall()
     conn.close()
     return render_template('category.html', section=section, category=category, items=items)
@@ -121,8 +91,8 @@ def view_category(section, category):
 def view_item(section, category, item_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    # CHANGE ONCE FINAL
-    cursor.execute("SELECT * FROM listings WHERE listing_id=%s", (item_id,))
+    # TODO: Replace with dynamic lookup based on section table
+cursor.execute("SELECT * FROM ForSale WHERE ID=%s", (item_id,))
     item = cursor.fetchone()
     conn.close()
     if not item:
@@ -131,13 +101,12 @@ def view_item(section, category, item_id):
 
 @app.route('/create-listing/<section>/<category>', methods=['GET', 'POST'])
 def create_listing(section, category):
-    if 'user_id' not in session:
+    if 'username' not in session:
         return redirect(url_for('login'))
-    # CHANGE ONCE FINAL
-    if request.method == 'POST':
+        if request.method == 'POST':
         form = request.form
         attributes = (
-            session['user_id'], section, category,
+    category,
             form['title'], form['description'],
             form['year'], form['make'], form['color'],
             form['item_type'], form['condition'],
@@ -147,13 +116,13 @@ def create_listing(section, category):
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        # CHANGE ONCE FINAL
-        cursor.execute("""
-            INSERT INTO listings
-            (user_id, section, category, title, description, year_built, make_model,
-             color, item_type, item_condition, price, city, phone, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, attributes)
+        # TODO: Adjust INSERT to use correct table like ForSale, Housing, etc.
+cursor.execute("""
+        INSERT INTO ForSale
+        (Type, Title, Description, YearBuilt, MakeModel,
+         Color, SubType, ItemCondition, Price, City, PhoneNumber, CreatedAt)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, attributes)
         conn.commit()
         conn.close()
 
