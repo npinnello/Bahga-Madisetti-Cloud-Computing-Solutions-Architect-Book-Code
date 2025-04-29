@@ -11,8 +11,6 @@ DB_PASSWORD = "se422"
 DB_NAME = "photo_gallery"
 DB_CONNECTION_NAME = "se422proj4:us-central1:photo-gallery-db"
 
-# GCS configuration
-
 # Sections & Categories
 SECTIONS = {
     "for-sale": ["cars-trucks", "motorcycles", "boats", "books", "furniture"],
@@ -23,7 +21,6 @@ SECTIONS = {
 }
 
 # DB connection
-
 def get_db_connection():
     try:
         unix_socket = f"/cloudsql/{DB_CONNECTION_NAME}"
@@ -52,6 +49,7 @@ def login():
             conn.close()
 
             if user and user['password'] == password:
+                session['username'] = user['username']
                 conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM listings")  # CHANGE ONCE FINAL
@@ -103,6 +101,7 @@ def view_item(section, category, item_id):
 def create_listing(section, category):
     if 'username' not in session:
         return redirect(url_for('login'))
+
     if request.method == 'POST':
         form = request.form
         attributes = (
@@ -118,11 +117,11 @@ def create_listing(section, category):
         cursor = conn.cursor()
         # TODO: Adjust INSERT to use correct table like ForSale, Housing, etc.
         cursor.execute("""
-        INSERT INTO ForSale
-        (Type, Title, Description, YearBuilt, MakeModel,
-         Color, SubType, ItemCondition, Price, City, PhoneNumber, CreatedAt)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, attributes)
+            INSERT INTO ForSale
+            (Type, Title, Description, YearBuilt, MakeModel,
+             Color, SubType, ItemCondition, Price, City, PhoneNumber, CreatedAt)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, attributes)
         conn.commit()
         conn.close()
 
@@ -131,9 +130,6 @@ def create_listing(section, category):
     return render_template('create_listing.html', section=section, category=category)
 
 
-@app.errorhandler(404)
-def not_found(e):
-    return render_template('404.html'), 404
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
