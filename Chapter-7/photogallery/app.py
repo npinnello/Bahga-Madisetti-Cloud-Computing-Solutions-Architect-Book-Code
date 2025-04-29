@@ -1,37 +1,31 @@
-#!/usr/bin/env python3
-from urllib.request import urlopen
-from flask import Flask, jsonify, abort, request, make_response, url_for, render_template, redirect, Response, send_from_directory
-from urllib.parse import quote
-from google.cloud import storage
-from werkzeug.utils import secure_filename
-import os
-import time
-import datetime
-import exifread
-import json
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify, abort
 import pymysql
-import requests
-pymysql.install_as_MySQLdb()
-import MySQLdb
+import os
+from datetime import datetime
 
-app = Flask(__name__, static_url_path="")
-
-UPLOAD_FOLDER = os.path.join(app.root_path, 'media')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+app = Flask(__name__)
 
 # Google Cloud SQL configuration
 DB_USER = "root"
 DB_PASSWORD = "se422"
 DB_NAME = "photo_gallery"
 DB_CONNECTION_NAME = "se422proj4:us-central1:photo-gallery-db"
-DB_HOST = "34.58.7.121"
 
-# GCS Configuration
-BUCKET_NAME = os.getenv("BUCKET_NAME", "se-422-photo-gallery")
+
+# Sections & Categories
+SECTIONS = {
+    "for-sale": ["cars-trucks", "motorcycles", "boats", "books", "furniture"],
+    "housing": ["apartments", "rooms", "sublets", "parking", "storage"],
+    "services": ["cleaning", "tutoring", "plumbing", "beauty", "moving"],
+    "jobs": ["tech", "retail", "education", "hospitality", "freelance"],
+    "community": ["events", "volunteers", "activities", "classes", "lost-found"]
+}
+
+# DB connection
 
 def get_db_connection():
     try:
-        unix_socket = '/cloudsql/se422proj4:us-central1:photo-gallery-db'
+        unix_socket = f"/cloudsql/{DB_CONNECTION_NAME}"
         return pymysql.connect(
             user=DB_USER,
             password=DB_PASSWORD,
@@ -40,65 +34,13 @@ def get_db_connection():
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
-    except pymysql.Error as e:
-        print(f"Error connecting to MySQL: {e}")
+    except pymysql.MySQLError as e:
+        print(f"MySQL connection error: {e}")
         raise
 
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.errorhandler(400)
-def bad_request(error):
-    return make_response(jsonify({'error': 'Bad request'}), 400)
-
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)
-
-def getExifData(file_stream):
-    tags = exifread.process_file(file_stream)
-    return {tag: str(tags[tag]) for tag in tags if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote')}
-
-def upload_to_gcs(file):
-    if not BUCKET_NAME:
-        raise ValueError("BUCKET_NAME environment variable not set")
-
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(BUCKET_NAME)
-    filename = secure_filename(file.filename)
-    blob = bucket.blob(f"photos/{filename}")
-    blob.upload_from_file(file, content_type=file.content_type)
-    return f"https://storage.googleapis.com/{BUCKET_NAME}/photos/{filename}"
-
-@app.route('/', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT user_id, username, password FROM users WHERE username = %s", (username,))
-            user = cursor.fetchone()
-            conn.close()
-
-            if user and user['password'] == password:
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                cursor.execute("SELECT * FROM photos")
-                results = cursor.fetchall()
-                for photo in results:
-                    photo['URL'] = photo['storage_path']  # Alias for template compatibility
-                conn.close()
-
-                return render_template('home.html', photos=results)
-
-            return render_template('index.html', error="Invalid username or password")
-        except pymysql.Error as e:
-            print(f"Database error: {e}")
-            return render_template('index.html', error="Database error occurred. Please try again.")
-    return render_template('index.html')
+@app.route('/')
+def index():
+    return render_template('index.html', sections=SECTIONS)
 
 @app.route('/create-user', methods=['GET', 'POST'])
 def create_user():
@@ -126,113 +68,103 @@ def create_user():
             return render_template('create-user.html', error="Database error occurred. Please try again.")
     return render_template('create-user.html')
 
-@app.route('/home', methods=['GET'])
-def home():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM photo;")
-    results = cursor.fetchall()
-    conn.close()
-
-    items = [{"PhotoID": item[0], "CreationTime": item[1], "Title": item[2], "Description": item[3], "Tags": item[4], "URL": item[5]} for item in results]
-
-    return render_template('home.html', photos=items)
-
-@app.route('/add', methods=['GET', 'POST'])
-def add_photo():
+@app.route('/', methods=['GET', 'POST'])
+def login():
     if request.method == 'POST':
-        file = request.files['imagefile']
-        title = request.form['title']
-        tags = request.form['tags']
-        description = request.form['description']
+        username = request.form.get('username')
+        password = request.form.get('password')
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT user_id, username, password FROM users WHERE username = %s", (username,))
+            user = cursor.fetchone()
+            conn.close()
 
-        if file and allowed_file(file.filename):
-            public_url = upload_to_gcs(file)
-            file.stream.seek(0)
-            ExifData = getExifData(file.stream)
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-            try:
+            if user and user['password'] == password:
                 conn = get_db_connection()
                 cursor = conn.cursor()
-                cursor.execute("SELECT album_id FROM albums WHERE user_id = %s LIMIT 1", (1,))
-                album = cursor.fetchone()
-
-                if not album:
-                    cursor.execute("INSERT INTO albums (user_id, title, description, created_at) VALUES (%s, %s, %s, %s)",
-                                   (1, 'Default Album', 'Auto-created album', timestamp))
-                    conn.commit()
-                    cursor.execute("SELECT LAST_INSERT_ID() AS album_id")
-                    album = cursor.fetchone()
-
-                cursor.execute("INSERT INTO photos (album_id, user_id, title, description, storage_path, upload_date) VALUES (%s, %s, %s, %s, %s, %s)",
-                               (album['album_id'], 1, title, description, public_url, timestamp))
-                conn.commit()
+                 # CHANGE ONCE FINAL
+                cursor.execute("SELECT * FROM listings")  
+                results = cursor.fetchall()
                 conn.close()
-                return redirect('/')
-            except pymysql.Error as e:
-                print(f"Photo insert failed: {e}")
-                return render_template('form.html', error="Failed to add photo.")
-    return render_template('form.html')
 
-@app.route('/<int:photoID>', methods=['GET'])
-def view_photo(photoID):
+                return render_template('home.html', listings=results)
+
+            return render_template('index.html', error="Invalid username or password")
+        except pymysql.Error as e:
+            print(f"Database error: {e}")
+            return render_template('index.html', error="Database error occurred. Please try again.")
+    return render_template('index.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
+@app.route('/<section>')
+def view_section(section):
+    if section not in SECTIONS:
+        abort(404)
+    return render_template('section.html', section=section, categories=SECTIONS[section])
+
+@app.route('/<section>/<category>')
+def view_category(section, category):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM photos WHERE photo_id = %s", (photoID,))
+    # CHANGE ONCE FINAL
+    cursor.execute("SELECT * FROM listings WHERE section=%s AND category=%s", (section, category))
+    items = cursor.fetchall()
+    conn.close()
+    return render_template('category.html', section=section, category=category, items=items)
+
+@app.route('/<section>/<category>/<int:item_id>')
+def view_item(section, category, item_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # CHANGE ONCE FINAL
+    cursor.execute("SELECT * FROM listings WHERE listing_id=%s", (item_id,))
     item = cursor.fetchone()
     conn.close()
-
-    if item:
-        item['URL'] = item['storage_path']  # Alias for templates
-        tags = []
-        exifdata = {}
-        return render_template('photodetail.html', photo=item, tags=tags, exifdata=exifdata)
-    else:
+    if not item:
         abort(404)
-        
-@app.route('/media/<path:filename>')
-def serve_media(filename):
-    return send_from_directory('media', filename)
+    return render_template('item.html', item=item)
 
-@app.route('/search', methods=['GET'])
-def search_page():
-    query = request.args.get('query', None)
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM photos WHERE title LIKE %s OR description LIKE %s", 
-                   (f"%{query}%", f"%{query}%"))
-    items = cursor.fetchall()
-    for item in items:
-        item['URL'] = item['storage_path']  # Alias for template
-    conn.close()
-    return render_template('search.html', photos=items, searchquery=query)
-
-# @app.route('/download/<filename>')
-# def download_file(filename):
-#     """Serve a file from the local UPLOAD_FOLDER."""
-#     return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
-
-@app.route('/download/<filename>')
-def download_file(filename):
-    """Force download using public URL"""
-    url = f"https://storage.googleapis.com/{BUCKET_NAME}/photos/{filename}"
-    
-    try:
-        remote_file = urlopen(url)
-        data = remote_file.read()
-        
-        response = Response(
-            data,
-            mimetype=remote_file.headers['content-type'],
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}",
-                "Content-Length": remote_file.headers['content-length']
-            }
+@app.route('/create-listing/<section>/<category>', methods=['GET', 'POST'])
+def create_listing(section, category):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    # CHANGE ONCE FINAL
+    if request.method == 'POST':
+        form = request.form
+                attributes = (
+            session['user_id'], section, category,
+            form['title'], form['description'],
+            form['year'], form['make'], form['color'],
+            form['item_type'], form['condition'],
+            form['price'], form['city'], form['phone'],
+            datetime.utcnow()
         )
-        return response
-    except Exception as e:
-        abort(404)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # CHANGE ONCE FINAL
+        cursor.execute("""
+            INSERT INTO listings
+            (user_id, section, category, title, description, year_built, make_model,
+             color, item_type, item_condition, price, city, phone, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, attributes)
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('view_category', section=section, category=category))
+
+    return render_template('create_listing.html', section=section, category=category)
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=8080)
+    app.run(debug=True, host='0.0.0.0', port=8080)
