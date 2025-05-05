@@ -32,7 +32,7 @@ def get_db_connection():
         if os.name == 'nt':  # Windows
             # Use TCP connection to Cloud SQL public IP
             return pymysql.connect(
-                host='34.58.7.121',  # Replace with your Cloud SQL public IP
+                host='34.58.7.121',
                 port=3306,
                 user=DB_USER,
                 password=DB_PASSWORD,
@@ -52,32 +52,6 @@ def get_db_connection():
     except pymysql.MySQLError as e:
         print(f"MySQL connection error: {e}")
         raise
-
-#Temp function for db connection testing
-@app.route('/db-debug')
-def db_debug():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT VERSION()")
-        version = cursor.fetchone()
-        cursor.execute("SHOW TABLES")
-        tables = cursor.fetchall()
-        conn.close()
-        return f"""
-            <h1>Database Connection Successful</h1>
-            <p>MySQL Version: {version['VERSION()']}</p>
-            <p>Tables in {DB_NAME}:</p>
-            <ul>
-                {"".join(f"<li>{table['Tables_in_photo_gallery']}</li>" for table in tables)}
-            </ul>
-        """
-    except Exception as e:
-        return f"""
-            <h1>Database Connection Failed</h1>
-            <p style="color:red">Error: {str(e)}</p>
-            <p>Attempted connection as: {DB_USER} to {DB_NAME}</p>
-        """, 500
 
 # Routes
 @app.route('/')
@@ -106,10 +80,9 @@ def login():
                 session['username'] = user['username']
                 conn = get_db_connection()
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM listings")  # CHANGE ONCE FINAL
+                cursor.execute("SELECT * FROM listings")
                 results = cursor.fetchall()
                 conn.close()
-
                 return render_template('home.html', listings=results)
 
             return render_template('index.html', error="Invalid username or password")
@@ -186,16 +159,69 @@ def view_category(section, category):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        table_name = section.replace('-', '')  # Exact table name case
         
-        # Simplified query for testing
-        cursor.execute(f"""
-            SELECT ID as id, Type as category, Description as description
-            FROM {table_name} 
-            WHERE Type=%s 
-            LIMIT 5
-        """, (category,))
+        # Map section names to exact table names
+        table_map = {
+            "for-sale": "ForSale",
+            "housing": "Housing",
+            "services": "Services",
+            "jobs": "Jobs",
+            "community": "Community"
+        }
         
+        table_name = table_map[section]
+        
+        # Base query for all sections
+        query = f"""
+            SELECT 
+                ID as id,
+                Type as category,
+                Description as description,
+                Price as price,
+                City as city,
+                PhoneNumber as phone
+        """
+        
+        # Section-specific fields with proper escaping
+        if section == "for-sale":
+            query += """,
+                YearBuilt as year_built,
+                MakeModel as make_model,
+                Color as color,
+                SubType as item_type,
+                `ItemCondition` as `condition`
+            """
+        elif section == "housing":
+            query += """,
+                YearBuilt as year_built,
+                Bedrooms as bedrooms,
+                Bathrooms as bathrooms,
+                SquareFeet as square_feet,
+                LotSize as lot_size
+            """
+        elif section == "services":
+            query += """,
+                YearStarted as year_started,
+                Availability as availability,
+                ExperienceYears as experience_years
+            """
+        elif section == "jobs":
+            query += """,
+                Title as title,
+                Availability as availability,
+                ExperienceYears as experience_years
+            """
+        elif section == "community":
+            query += """,
+                Title as title,
+                Date as date,
+                Location as location,
+                Organizer as organizer
+            """
+            
+        query += f" FROM `{table_name}` WHERE Type=%s"
+        
+        cursor.execute(query, (category,))
         items = cursor.fetchall()
         conn.close()
         
@@ -207,8 +233,8 @@ def view_category(section, category):
                             section=section,
                             category=category,
                             items=items)
-    except Exception as e:
-        print(f"Error in view_category: {str(e)}")
+    except pymysql.Error as e:
+        print(f"Database error in view_category: {e}")
         abort(500, description=str(e))
 
 @app.route('/<section>/<category>/<int:item_id>')
@@ -220,11 +246,17 @@ def view_item(section, category, item_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Dynamic table selection based on section
-        table_name = section.replace('-', '')  # Remove capitalize() to match your table names        print(table_name)
+        table_map = {
+            "for-sale": "ForSale",
+            "housing": "Housing",
+            "services": "Services",
+            "jobs": "Jobs",
+            "community": "Community"
+        }
+        table_name = table_map[section]
         cursor.execute(f"""
-            SELECT * FROM {table_name} 
-            WHERE id=%s AND category=%s
+            SELECT * FROM `{table_name}` 
+            WHERE id=%s AND Type=%s
         """, (item_id, category))
         item = cursor.fetchone()
         conn.close()
@@ -252,7 +284,14 @@ def create_listing(section, category):
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            table_name = section.replace('-', '')
+            table_map = {
+                "for-sale": "ForSale",
+                "housing": "Housing",
+                "services": "Services",
+                "jobs": "Jobs",
+                "community": "Community"
+            }
+            table_name = table_map[section]
             
             # Base fields for all sections
             columns = ["Type", "Description", "Price", "City", "PhoneNumber"]
@@ -260,9 +299,9 @@ def create_listing(section, category):
                      request.form['price'], request.form['city'], 
                      request.form['phone']]
             
-            # Section-specific fields
+            # Section-specific fields with proper escaping
             if section == "for-sale":
-                columns += ["YearBuilt", "MakeModel", "Color", "SubType", "ItemCondition"]
+                columns += ["YearBuilt", "MakeModel", "Color", "SubType", "`ItemCondition`"]
                 values += [
                     request.form.get('year_built'),
                     request.form.get('make_model'),
@@ -279,14 +318,13 @@ def create_listing(section, category):
                     request.form.get('square_feet'),
                     request.form.get('lot_size')
                 ]
-            # Add other sections as needed...
             
             # Build the dynamic query
             placeholders = ", ".join(["%s"] * len(values))
             columns_str = ", ".join(columns)
             
             cursor.execute(
-                f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders})",
+                f"INSERT INTO `{table_name}` ({columns_str}) VALUES ({placeholders})",
                 values
             )
             conn.commit()
@@ -294,7 +332,6 @@ def create_listing(section, category):
             
             flash("Listing created successfully!", "success")
             return redirect(url_for('view_category', section=section, category=category))
-            
         except pymysql.Error as e:
             print(f"Database error: {e}")
             flash("Database error occurred", "danger")
