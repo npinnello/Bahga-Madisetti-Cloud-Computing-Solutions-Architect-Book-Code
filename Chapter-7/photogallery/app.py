@@ -29,10 +29,11 @@ def inject_sections():
 # DB connection
 def get_db_connection():
     try:
-        print(f"Attempting to connect to database: {DB_NAME}")  # Debug
         if os.name == 'nt':  # Windows
-            conn = pymysql.connect(
-                host='localhost',
+            # Use TCP connection to Cloud SQL public IP
+            return pymysql.connect(
+                host='34.58.7.121',  # Replace with your Cloud SQL public IP
+                port=3306,
                 user=DB_USER,
                 password=DB_PASSWORD,
                 db=DB_NAME,
@@ -40,16 +41,14 @@ def get_db_connection():
                 cursorclass=pymysql.cursors.DictCursor
             )
         else:  # Unix/Linux (Google Cloud)
-            conn = pymysql.connect(
-                unix_socket=f"/cloudsql/{DB_CONNECTION_NAME}",
+            return pymysql.connect(
+                unix_socket=f'/cloudsql/{DB_CONNECTION_NAME}',
                 user=DB_USER,
                 password=DB_PASSWORD,
                 db=DB_NAME,
                 charset='utf8mb4',
                 cursorclass=pymysql.cursors.DictCursor
             )
-        print("Database connection successful!")  # Debug
-        return conn
     except pymysql.MySQLError as e:
         print(f"MySQL connection error: {e}")
         raise
@@ -187,59 +186,16 @@ def view_category(section, category):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        table_name = section.replace('-', '')
+        table_name = section.replace('-', '')  # Exact table name case
         
-        # Base query for all sections
-        query = f"""
-            SELECT 
-                ID as id,
-                Type as category,
-                Description as description,
-                Price as price,
-                City as city,
-                PhoneNumber as phone
-        """
+        # Simplified query for testing
+        cursor.execute(f"""
+            SELECT ID as id, Type as category, Description as description
+            FROM {table_name} 
+            WHERE Type=%s 
+            LIMIT 5
+        """, (category,))
         
-        # Section-specific fields
-        if section == "for-sale":
-            query += """,
-                YearBuilt as year_built,
-                MakeModel as make_model,
-                Color as color,
-                SubType as item_type,
-                ItemCondition as condition
-            """
-        elif section == "housing":
-            query += """,
-                YearBuilt as year_built,
-                Bedrooms as bedrooms,
-                Bathrooms as bathrooms,
-                SquareFeet as square_feet,
-                LotSize as lot_size
-            """
-        elif section == "services":
-            query += """,
-                YearStarted as year_started,
-                Availability as availability,
-                ExperienceYears as experience_years
-            """
-        elif section == "jobs":
-            query += """,
-                Title as title,
-                Availability as availability,
-                ExperienceYears as experience_years
-            """
-        elif section == "community":
-            query += """,
-                Title as title,
-                Date as date,
-                Location as location,
-                Organizer as organizer
-            """
-            
-        query += f" FROM {table_name} WHERE Type=%s"
-        
-        cursor.execute(query, (category,))
         items = cursor.fetchall()
         conn.close()
         
@@ -251,9 +207,9 @@ def view_category(section, category):
                             section=section,
                             category=category,
                             items=items)
-    except pymysql.Error as e:
-        print(f"Database error: {e}")
-        abort(500)
+    except Exception as e:
+        print(f"Error in view_category: {str(e)}")
+        abort(500, description=str(e))
 
 @app.route('/<section>/<category>/<int:item_id>')
 def view_item(section, category, item_id):
