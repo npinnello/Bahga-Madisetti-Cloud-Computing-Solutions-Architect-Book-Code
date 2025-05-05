@@ -54,6 +54,32 @@ def get_db_connection():
         print(f"MySQL connection error: {e}")
         raise
 
+#Temp function for db connection testing
+@app.route('/db-debug')
+def db_debug():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT VERSION()")
+        version = cursor.fetchone()
+        cursor.execute("SHOW TABLES")
+        tables = cursor.fetchall()
+        conn.close()
+        return f"""
+            <h1>Database Connection Successful</h1>
+            <p>MySQL Version: {version['VERSION()']}</p>
+            <p>Tables in {DB_NAME}:</p>
+            <ul>
+                {"".join(f"<li>{table['Tables_in_photo_gallery']}</li>" for table in tables)}
+            </ul>
+        """
+    except Exception as e:
+        return f"""
+            <h1>Database Connection Failed</h1>
+            <p style="color:red">Error: {str(e)}</p>
+            <p>Attempted connection as: {DB_USER} to {DB_NAME}</p>
+        """, 500
+
 # Routes
 @app.route('/')
 def index():
