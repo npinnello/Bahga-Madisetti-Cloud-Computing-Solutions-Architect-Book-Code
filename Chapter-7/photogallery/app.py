@@ -262,16 +262,8 @@ def view_item(section, category, item_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        table_map = {
-            "for-sale": "ForSale",
-            "housing": "Housing",
-            "services": "Services",
-            "jobs": "Jobs",
-            "community": "Community"
-        }
-        table_name = table_map[section]
         cursor.execute(f"""
-            SELECT * FROM `{table_name}` 
+            SELECT * FROM `{section}` 
             WHERE id=%s AND Type=%s
         """, (item_id, category))
         item = cursor.fetchone()
