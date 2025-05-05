@@ -29,8 +29,9 @@ def inject_sections():
 # DB connection
 def get_db_connection():
     try:
+        print(f"Attempting to connect to database: {DB_NAME}")  # Debug
         if os.name == 'nt':  # Windows
-            return pymysql.connect(
+            conn = pymysql.connect(
                 host='localhost',
                 user=DB_USER,
                 password=DB_PASSWORD,
@@ -39,7 +40,7 @@ def get_db_connection():
                 cursorclass=pymysql.cursors.DictCursor
             )
         else:  # Unix/Linux (Google Cloud)
-            return pymysql.connect(
+            conn = pymysql.connect(
                 unix_socket=f"/cloudsql/{DB_CONNECTION_NAME}",
                 user=DB_USER,
                 password=DB_PASSWORD,
@@ -47,6 +48,8 @@ def get_db_connection():
                 charset='utf8mb4',
                 cursorclass=pymysql.cursors.DictCursor
             )
+        print("Database connection successful!")  # Debug
+        return conn
     except pymysql.MySQLError as e:
         print(f"MySQL connection error: {e}")
         raise
@@ -152,19 +155,65 @@ def view_section(section):
 
 @app.route('/<section>/<category>')
 def view_category(section, category):
-    """Show listings for a specific category"""
     if section not in SECTIONS or category not in SECTIONS[section]:
         abort(404)
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Dynamic table selection based on section
         table_name = section.replace('-', '')
-        cursor.execute(f"""
-            SELECT * FROM {table_name} 
-            WHERE category=%s
-        """, (category,))
+        
+        # Base query for all sections
+        query = f"""
+            SELECT 
+                ID as id,
+                Type as category,
+                Description as description,
+                Price as price,
+                City as city,
+                PhoneNumber as phone
+        """
+        
+        # Section-specific fields
+        if section == "for-sale":
+            query += """,
+                YearBuilt as year_built,
+                MakeModel as make_model,
+                Color as color,
+                SubType as item_type,
+                ItemCondition as condition
+            """
+        elif section == "housing":
+            query += """,
+                YearBuilt as year_built,
+                Bedrooms as bedrooms,
+                Bathrooms as bathrooms,
+                SquareFeet as square_feet,
+                LotSize as lot_size
+            """
+        elif section == "services":
+            query += """,
+                YearStarted as year_started,
+                Availability as availability,
+                ExperienceYears as experience_years
+            """
+        elif section == "jobs":
+            query += """,
+                Title as title,
+                Availability as availability,
+                ExperienceYears as experience_years
+            """
+        elif section == "community":
+            query += """,
+                Title as title,
+                Date as date,
+                Location as location,
+                Organizer as organizer
+            """
+            
+        query += f" FROM {table_name} WHERE Type=%s"
+        
+        cursor.execute(query, (category,))
         items = cursor.fetchall()
         conn.close()
         
@@ -190,7 +239,7 @@ def view_item(section, category, item_id):
         conn = get_db_connection()
         cursor = conn.cursor()
         # Dynamic table selection based on section
-        table_name = section.replace('-', '')
+        table_name = section.replace('-', '')  # Remove capitalize() to match your table names        print(table_name)
         cursor.execute(f"""
             SELECT * FROM {table_name} 
             WHERE id=%s AND category=%s
@@ -211,7 +260,6 @@ def view_item(section, category, item_id):
 
 @app.route('/create-listing/<section>/<category>', methods=['GET', 'POST'])
 def create_listing(section, category):
-    """Handle new listing creation"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
@@ -222,31 +270,49 @@ def create_listing(section, category):
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            
-            # Dynamic table selection based on section
             table_name = section.replace('-', '')
-            cursor.execute(f"""
-                INSERT INTO {table_name} 
-                (user_id, category, title, description, 
-                 year_built, make_model, color, item_type, 
-                 condition, price, city, phone, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                session['user_id'], category,
-                request.form['title'], request.form['description'],
-                request.form.get('year_built'), request.form.get('make_model'),
-                request.form.get('color'), request.form.get('item_type'),
-                request.form.get('condition'), request.form['price'],
-                request.form['city'], request.form['phone'],
-                datetime.utcnow()
-            ))
+            
+            # Base fields for all sections
+            columns = ["Type", "Description", "Price", "City", "PhoneNumber"]
+            values = [category, request.form['description'], 
+                     request.form['price'], request.form['city'], 
+                     request.form['phone']]
+            
+            # Section-specific fields
+            if section == "for-sale":
+                columns += ["YearBuilt", "MakeModel", "Color", "SubType", "ItemCondition"]
+                values += [
+                    request.form.get('year_built'),
+                    request.form.get('make_model'),
+                    request.form.get('color'),
+                    request.form.get('item_type'),
+                    request.form.get('condition')
+                ]
+            elif section == "housing":
+                columns += ["YearBuilt", "Bedrooms", "Bathrooms", "SquareFeet", "LotSize"]
+                values += [
+                    request.form.get('year_built'),
+                    request.form.get('bedrooms'),
+                    request.form.get('bathrooms'),
+                    request.form.get('square_feet'),
+                    request.form.get('lot_size')
+                ]
+            # Add other sections as needed...
+            
+            # Build the dynamic query
+            placeholders = ", ".join(["%s"] * len(values))
+            columns_str = ", ".join(columns)
+            
+            cursor.execute(
+                f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders})",
+                values
+            )
             conn.commit()
             conn.close()
             
             flash("Listing created successfully!", "success")
-            return redirect(url_for('view_category',
-                                 section=section,
-                                 category=category))
+            return redirect(url_for('view_category', section=section, category=category))
+            
         except pymysql.Error as e:
             print(f"Database error: {e}")
             flash("Database error occurred", "danger")
