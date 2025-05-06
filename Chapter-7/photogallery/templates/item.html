@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}{{ item.title or item.make_model or item.description[:30] or "Listing" }}{% endblock %}
+{% block title %}{{ item.title }}{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-md-8">
         <div class="card mb-4">
-            <img src="https://via.placeholder.com/800x400?text={{ item.title or item.make_model or 'Listing' }}" class="card-img-top" alt="{{ item.title or 'Listing Image' }}">
+            <img src="https://via.placeholder.com/800x400?text={{ item.title }}" class="card-img-top" alt="{{ item.title }}">
             <div class="card-body">
-                <h2 class="card-title">{{ item.title or item.make_model or "Untitled Listing" }}</h2>
+                <h2 class="card-title">{{ item.title }}</h2>
+
                 {% if item.price %}
                 <h4 class="text-primary my-3">${{ item.price }}</h4>
                 {% endif %}
@@ -27,6 +28,15 @@
                             {% if item.year_built %}<li class="list-group-item"><strong>Year Built:</strong> {{ item.year_built }}</li>{% endif %}
                             {% if item.item_type %}<li class="list-group-item"><strong>Type:</strong> {{ item.item_type }}</li>{% endif %}
                             {% if item.color %}<li class="list-group-item"><strong>Color:</strong> {{ item.color }}</li>{% endif %}
+                            {% if item.bedrooms %}<li class="list-group-item"><strong>Bedrooms:</strong> {{ item.bedrooms }}</li>{% endif %}
+                            {% if item.bathrooms %}<li class="list-group-item"><strong>Bathrooms:</strong> {{ item.bathrooms }}</li>{% endif %}
+                            {% if item.square_feet %}<li class="list-group-item"><strong>Square Feet:</strong> {{ item.square_feet }}</li>{% endif %}
+                            {% if item.lot_size %}<li class="list-group-item"><strong>Lot Size:</strong> {{ item.lot_size }}</li>{% endif %}
+                            {% if item.availability %}<li class="list-group-item"><strong>Availability:</strong> {{ item.availability }}</li>{% endif %}
+                            {% if item.experience_years %}<li class="list-group-item"><strong>Experience:</strong> {{ item.experience_years }} years</li>{% endif %}
+                            {% if item.date %}<li class="list-group-item"><strong>Date:</strong> {{ item.date }}</li>{% endif %}
+                            {% if item.location %}<li class="list-group-item"><strong>Location:</strong> {{ item.location }}</li>{% endif %}
+                            {% if item.organizer %}<li class="list-group-item"><strong>Organizer:</strong> {{ item.organizer }}</li>{% endif %}
                         </ul>
                     </div>
                     <div class="col-md-6">
