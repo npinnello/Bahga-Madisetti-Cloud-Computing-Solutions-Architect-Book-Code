@@ -232,8 +232,10 @@ def view_category(section, category):
                 Title as title,
                 Date as date,
                 Location as location,
-                Organizer as organizer
+                Organizer as organizer,
+                ContactInfo as phone
             """
+
             
         query += f" FROM `{section}` WHERE Type=%s"
         
@@ -308,7 +310,8 @@ def view_item(section, category, item_id):
                 Title as title,
                 Date as date,
                 Location as location,
-                Organizer as organizer
+                Organizer as organizer,
+                ContactInfo as phone
             """
 
         query += f" FROM `{section}` WHERE id=%s AND Type=%s"
