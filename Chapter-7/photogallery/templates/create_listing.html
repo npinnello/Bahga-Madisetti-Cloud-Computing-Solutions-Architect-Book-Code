@@ -11,11 +11,13 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('create_listing', section=section, category=category) }}">
+                    <!-- Common fields for all sections -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description*</label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+                    </div>
+                    
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="title" class="form-label">Title*</label>
-                            <input type="text" class="form-control" id="title" name="title" required>
-                        </div>
                         <div class="col-md-6">
                             <label for="price" class="form-label">Price*</label>
                             <div class="input-group">
@@ -23,56 +25,141 @@
                                 <input type="number" class="form-control" id="price" name="price" step="0.01" required>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description*</label>
-                        <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="year" class="form-label">Year Built*</label>
-                            <input type="number" class="form-control" id="year" name="year" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="make" class="form-label">Make/Model*</label>
-                            <input type="text" class="form-control" id="make" name="make" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="color" class="form-label">Color*</label>
-                            <input type="text" class="form-control" id="color" name="color" required>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="item_type" class="form-label">Type*</label>
-                            <input type="text" class="form-control" id="item_type" name="item_type" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="condition" class="form-label">Condition*</label>
-                            <select class="form-select" id="condition" name="condition" required>
-                                <option value="">Select condition</option>
-                                <option value="new">New</option>
-                                <option value="like-new">Like New</option>
-                                <option value="good">Good</option>
-                                <option value="fair">Fair</option>
-                                <option value="poor">Poor</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="city" class="form-label">City*</label>
                             <input type="text" class="form-control" id="city" name="city" value="Ames" required>
                         </div>
-                        <div class="col-md-6">
-                            <label for="phone" class="form-label">Phone Number*</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" required>
-                        </div>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number*</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" required>
+                    </div>
+                    
+                    <!-- Section-specific fields -->
+                    {% if section_key == 'ForSale' %}
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="year_built" class="form-label">Year Built*</label>
+                                <input type="number" class="form-control" id="year_built" name="year_built" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="make_model" class="form-label">Make/Model*</label>
+                                <input type="text" class="form-control" id="make_model" name="make_model" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="color" class="form-label">Color*</label>
+                                <input type="text" class="form-control" id="color" name="color" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="item_type" class="form-label">Item Type*</label>
+                                <input type="text" class="form-control" id="item_type" name="item_type" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="condition" class="form-label">Condition*</label>
+                                <select class="form-select" id="condition" name="condition" required>
+                                    <option value="">Select condition</option>
+                                    <option value="New">New</option>
+                                    <option value="Like New">Like New</option>
+                                    <option value="Good">Good</option>
+                                    <option value="Fair">Fair</option>
+                                    <option value="Poor">Poor</option>
+                                </select>
+                            </div>
+                        </div>
+                    
+                    {% elif section_key == 'Housing' %}
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="year_built" class="form-label">Year Built*</label>
+                                <input type="number" class="form-control" id="year_built" name="year_built" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="bedrooms" class="form-label">Bedrooms*</label>
+                                <input type="number" class="form-control" id="bedrooms" name="bedrooms" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="bathrooms" class="form-label">Bathrooms*</label>
+                                <input type="number" class="form-control" id="bathrooms" name="bathrooms" step="0.5" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="square_feet" class="form-label">Square Feet*</label>
+                                <input type="number" class="form-control" id="square_feet" name="square_feet" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lot_size" class="form-label">Lot Size (acres)</label>
+                                <input type="number" class="form-control" id="lot_size" name="lot_size" step="0.01">
+                            </div>
+                        </div>
+                    
+                    {% elif section_key == 'Services' %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="year_started" class="form-label">Year Started*</label>
+                                <input type="number" class="form-control" id="year_started" name="year_started" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="availability" class="form-label">Availability*</label>
+                                <input type="text" class="form-control" id="availability" name="availability" placeholder="e.g., Mon-Fri 9am-5pm" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="experience_years" class="form-label">Years of Experience*</label>
+                            <input type="number" class="form-control" id="experience_years" name="experience_years" required>
+                        </div>
+                    
+                    {% elif section_key == 'Jobs' %}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Job Title*</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="availability" class="form-label">Availability*</label>
+                                <select class="form-select" id="availability" name="availability" required>
+                                    <option value="">Select availability</option>
+                                    <option value="Full-Time">Full-Time</option>
+                                    <option value="Part-Time">Part-Time</option>
+                                    <option value="Internship">Internship</option>
+                                    <option value="Contract">Contract</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="experience_years" class="form-label">Experience Required (years)</label>
+                                <input type="number" class="form-control" id="experience_years" name="experience_years">
+                            </div>
+                        </div>
+                    
+                    {% elif section_key == 'Community' %}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Event Title*</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date" class="form-label">Date*</label>
+                                <input type="date" class="form-control" id="date" name="date" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="location" class="form-label">Location*</label>
+                                <input type="text" class="form-control" id="location" name="location" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="organizer" class="form-label">Organizer*</label>
+                            <input type="text" class="form-control" id="organizer" name="organizer" required>
+                        </div>
+                    {% endif %}
                     
                     <div class="mb-3">
                         <label for="images" class="form-label">Images</label>

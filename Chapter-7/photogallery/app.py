@@ -103,6 +103,7 @@ def login():
             conn.close()
             
             if user and user['password'] == password:
+                session['user_id'] = user['user_id']  # Store user_id instead of username
                 session['username'] = user['username']
                 conn = get_db_connection()
                 cursor = conn.cursor()
@@ -338,57 +339,81 @@ def view_item(section, category, item_id):
 
 @app.route('/create-listing/<section>/<category>', methods=['GET', 'POST'])
 def create_listing(section, category):
+    """Handle listing creation for all sections"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
+
+    # Convert URL parameter to match SECTIONS keys (capitalized, no hyphens)
+    section_key = section.title().replace('-', '')
     
-    if section not in SECTIONS or category not in SECTIONS[section]:
+    if section_key not in SECTIONS or category not in SECTIONS[section_key]:
         abort(404)
     
     if request.method == 'POST':
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            table_map = {
-                "for-sale": "ForSale",
-                "housing": "Housing",
-                "services": "Services",
-                "jobs": "Jobs",
-                "community": "Community"
+            
+            # The table name exactly matches the section key
+            table_name = section_key
+            
+            # Common fields for all listings
+            common_fields = {
+                'Type': category,
+                'Description': request.form['description'],
+                'Price': request.form['price'],
+                'City': request.form['city'],
+                'PhoneNumber': request.form['phone']
             }
-            table_name = table_map[section]
             
-            # Base fields for all sections
-            columns = ["Type", "Description", "Price", "City", "PhoneNumber"]
-            values = [category, request.form['description'], 
-                     request.form['price'], request.form['city'], 
-                     request.form['phone']]
+            # Section-specific fields
+            extra_fields = {}
+            if section_key == 'ForSale':
+                extra_fields = {
+                    'YearBuilt': request.form.get('year_built'),
+                    'MakeModel': request.form.get('make_model'),
+                    'Color': request.form.get('color'),
+                    'SubType': request.form.get('item_type'),
+                    'ItemCondition': request.form.get('condition')
+                }
+            elif section_key == 'Housing':
+                extra_fields = {
+                    'YearBuilt': request.form.get('year_built'),
+                    'Bedrooms': request.form.get('bedrooms'),
+                    'Bathrooms': request.form.get('bathrooms'),
+                    'SquareFeet': request.form.get('square_feet'),
+                    'LotSize': request.form.get('lot_size')
+                }
+            elif section_key == 'Services':
+                extra_fields = {
+                    'YearStarted': request.form.get('year_started'),
+                    'Availability': request.form.get('availability'),
+                    'ExperienceYears': request.form.get('experience_years')
+                }
+            elif section_key == 'Jobs':
+                extra_fields = {
+                    'Title': request.form.get('title'),
+                    'Availability': request.form.get('availability'),
+                    'ExperienceYears': request.form.get('experience_years')
+                }
+            elif section_key == 'Community':
+                extra_fields = {
+                    'Title': request.form.get('title'),
+                    'Date': request.form.get('date'),
+                    'Location': request.form.get('location'),
+                    'Organizer': request.form.get('organizer')
+                }
             
-            # Section-specific fields with proper escaping
-            if section == "for-sale":
-                columns += ["YearBuilt", "MakeModel", "Color", "SubType", "`ItemCondition`"]
-                values += [
-                    request.form.get('year_built'),
-                    request.form.get('make_model'),
-                    request.form.get('color'),
-                    request.form.get('item_type'),
-                    request.form.get('condition')
-                ]
-            elif section == "housing":
-                columns += ["YearBuilt", "Bedrooms", "Bathrooms", "SquareFeet", "LotSize"]
-                values += [
-                    request.form.get('year_built'),
-                    request.form.get('bedrooms'),
-                    request.form.get('bathrooms'),
-                    request.form.get('square_feet'),
-                    request.form.get('lot_size')
-                ]
+            # Combine all fields
+            all_fields = {**common_fields, **extra_fields}
             
-            # Build the dynamic query
-            placeholders = ", ".join(["%s"] * len(values))
-            columns_str = ", ".join(columns)
+            # Build the SQL query
+            columns = ', '.join(all_fields.keys())
+            placeholders = ', '.join(['%s'] * len(all_fields))
+            values = list(all_fields.values())
             
             cursor.execute(
-                f"INSERT INTO `{table_name}` ({columns_str}) VALUES ({placeholders})",
+                f"INSERT INTO `{table_name}` ({columns}) VALUES ({placeholders})",
                 values
             )
             conn.commit()
@@ -396,13 +421,16 @@ def create_listing(section, category):
             
             flash("Listing created successfully!", "success")
             return redirect(url_for('view_category', section=section, category=category))
+            
         except pymysql.Error as e:
             print(f"Database error: {e}")
             flash("Database error occurred", "danger")
     
+    # For GET request, show the form
     return render_template('create_listing.html',
                          section=section,
-                         category=category)
+                         category=category,
+                         section_key=section_key)
 
 # Error handlers
 @app.errorhandler(404)
