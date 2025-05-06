@@ -262,26 +262,74 @@ def view_item(section, category, item_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(f"""
-            SELECT * FROM `{section}` 
-            WHERE id=%s AND Type=%s
-        """, (item_id, category))
+
+        # Base SELECT
+        query = f"""
+            SELECT 
+                ID as id,
+                Type as category,
+                Description as description,
+                Price as price,
+                City as city,
+                PhoneNumber as phone
+        """
+
+        # Add section-specific fields
+        if section == "ForSale":
+            query += """,
+                YearBuilt as year_built,
+                MakeModel as make_model,
+                Color as color,
+                SubType as item_type,
+                `ItemCondition` as `condition`
+            """
+        elif section == "Housing":
+            query += """,
+                YearBuilt as year_built,
+                Bedrooms as bedrooms,
+                Bathrooms as bathrooms,
+                SquareFeet as square_feet,
+                LotSize as lot_size
+            """
+        elif section == "Services":
+            query += """,
+                YearStarted as year_started,
+                Availability as availability,
+                ExperienceYears as experience_years
+            """
+        elif section == "Jobs":
+            query += """,
+                Title as title,
+                Availability as availability,
+                ExperienceYears as experience_years
+            """
+        elif section == "Community":
+            query += """,
+                Title as title,
+                Date as date,
+                Location as location,
+                Organizer as organizer
+            """
+
+        query += f" FROM `{section}` WHERE id=%s AND Type=%s"
+
+        cursor.execute(query, (item_id, category))
         item = cursor.fetchone()
         conn.close()
 
         if not item:
             abort(404)
 
-        # 🔧 Add a fallback title so template always has something
+        # Ensure 'title' is present for template
         if 'title' not in item or not item['title']:
-            item['title'] = item.get('MakeModel') or item.get('Description') or 'Listing'
+            item['title'] = item.get('make_model') or item.get('description') or 'Listing'
 
-        return render_template('item.html', 
+        return render_template('item.html',
                                item=item,
                                section=section,
                                category=category)
     except pymysql.Error as e:
-        print(f"Database error: {e}")
+        print(f"Database error in view_item: {e}")
         abort(500)
 
 
