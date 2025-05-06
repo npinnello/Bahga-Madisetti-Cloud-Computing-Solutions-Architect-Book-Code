@@ -258,7 +258,7 @@ def view_item(section, category, item_id):
     """Display single listing details"""
     if section not in SECTIONS or category not in SECTIONS[section]:
         abort(404)
-    
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -268,17 +268,22 @@ def view_item(section, category, item_id):
         """, (item_id, category))
         item = cursor.fetchone()
         conn.close()
-        
+
         if not item:
             abort(404)
-            
+
+        # 🔧 Add a fallback title so template always has something
+        if 'title' not in item or not item['title']:
+            item['title'] = item.get('MakeModel') or item.get('Description') or 'Listing'
+
         return render_template('item.html', 
-                            item=item,
-                            section=section,
-                            category=category)
+                               item=item,
+                               section=section,
+                               category=category)
     except pymysql.Error as e:
         print(f"Database error: {e}")
         abort(500)
+
 
 @app.route('/create-listing/<section>/<category>', methods=['GET', 'POST'])
 def create_listing(section, category):
