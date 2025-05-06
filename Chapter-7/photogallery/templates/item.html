@@ -9,41 +9,54 @@
             <img src="https://via.placeholder.com/800x400?text={{ item.title }}" class="card-img-top" alt="{{ item.title }}">
             <div class="card-body">
                 <h2 class="card-title">{{ item.title }}</h2>
-                <p class="text-muted">Posted on {{ item.created_at.strftime('%B %d, %Y') }}</p>
+
+                {% if item.price %}
                 <h4 class="text-primary my-3">${{ item.price }}</h4>
+                {% endif %}
+
                 <div class="mb-4">
                     <h5>Description</h5>
-                    <p class="card-text">{{ item.description }}</p>
+                    <p class="card-text">{{ item.description or "No description provided." }}</p>
                 </div>
-                
+
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <h5>Details</h5>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item"><strong>Condition:</strong> {{ item.condition|title }}</li>
-                            <li class="list-group-item"><strong>Make/Model:</strong> {{ item.make_model }}</li>
-                            <li class="list-group-item"><strong>Year Built:</strong> {{ item.year_built }}</li>
-                            <li class="list-group-item"><strong>Type:</strong> {{ item.item_type }}</li>
-                            <li class="list-group-item"><strong>Color:</strong> {{ item.color }}</li>
+                            {% if item.condition %}<li class="list-group-item"><strong>Condition:</strong> {{ item.condition|title }}</li>{% endif %}
+                            {% if item.make_model %}<li class="list-group-item"><strong>Make/Model:</strong> {{ item.make_model }}</li>{% endif %}
+                            {% if item.year_built %}<li class="list-group-item"><strong>Year Built:</strong> {{ item.year_built }}</li>{% endif %}
+                            {% if item.item_type %}<li class="list-group-item"><strong>Type:</strong> {{ item.item_type }}</li>{% endif %}
+                            {% if item.color %}<li class="list-group-item"><strong>Color:</strong> {{ item.color }}</li>{% endif %}
+                            {% if item.bedrooms %}<li class="list-group-item"><strong>Bedrooms:</strong> {{ item.bedrooms }}</li>{% endif %}
+                            {% if item.bathrooms %}<li class="list-group-item"><strong>Bathrooms:</strong> {{ item.bathrooms }}</li>{% endif %}
+                            {% if item.square_feet %}<li class="list-group-item"><strong>Square Feet:</strong> {{ item.square_feet }}</li>{% endif %}
+                            {% if item.lot_size %}<li class="list-group-item"><strong>Lot Size:</strong> {{ item.lot_size }}</li>{% endif %}
+                            {% if item.availability %}<li class="list-group-item"><strong>Availability:</strong> {{ item.availability }}</li>{% endif %}
+                            {% if item.experience_years %}<li class="list-group-item"><strong>Experience:</strong> {{ item.experience_years }} years</li>{% endif %}
+                            {% if item.date %}<li class="list-group-item"><strong>Date:</strong> {{ item.date }}</li>{% endif %}
+                            {% if item.location %}<li class="list-group-item"><strong>Location:</strong> {{ item.location }}</li>{% endif %}
+                            {% if item.organizer %}<li class="list-group-item"><strong>Organizer:</strong> {{ item.organizer }}</li>{% endif %}
                         </ul>
                     </div>
                     <div class="col-md-6">
                         <h5>Location</h5>
                         <div class="map-placeholder bg-light p-4 text-center mb-3">
                             [Map would go here]<br>
-                            {{ item.city }}, IA
+                            {{ item.city or "Unknown City" }}, IA
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="bg-light p-3 rounded">
                     <h5>Contact Seller</h5>
-                    <p><strong>Phone:</strong> {{ item.phone }}</p>
+                    <p><strong>Phone:</strong> {{ item.phone or "No contact provided" }}</p>
                     <button class="btn btn-primary">Send Message</button>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-body">
@@ -52,7 +65,7 @@
                 <a href="#" class="btn btn-outline-primary">View Profile</a>
             </div>
         </div>
-        
+
         <div class="card">
             <div class="card-header">
                 <h5>Safety Tips</h5>

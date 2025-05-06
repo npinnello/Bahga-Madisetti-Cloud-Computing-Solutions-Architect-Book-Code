@@ -14,11 +14,11 @@ DB_CONNECTION_NAME = "se422proj4:us-central1:photo-gallery-db"
 
 # Sections & Categories
 SECTIONS = {
-    "for-sale": ["cars-trucks", "motorcycles", "boats", "books", "furniture"],
-    "housing": ["apartments", "rooms", "sublets", "parking", "storage"],
-    "services": ["cleaning", "tutoring", "plumbing", "beauty", "moving"],
-    "jobs": ["tech", "retail", "education", "hospitality", "freelance"],
-    "community": ["events", "volunteers", "activities", "classes", "lost-found"]
+    "ForSale": ["Boat", "Car", "Motorcycle", "Book", "Furniture"],
+    "Housing": ["House", "Condo", "Apartment", "Townhouse", "Studio"],
+    "Services": ["Plumbing", "Tutoring", "Handyman", "Landscaping", "Snow Removal"],
+    "Jobs": ["Full-Time", "Part-Time", "Internship", "Co-op", "Seasonal"],
+    "Community": ["Workshop", "Festival", "Cleanup", "Fundraiser", "Children"]
 }
 
 # Context processor to make sections available in all templates
@@ -186,16 +186,6 @@ def view_category(section, category):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Map section names to exact table names
-        table_map = {
-            "for-sale": "ForSale",
-            "housing": "Housing",
-            "services": "Services",
-            "jobs": "Jobs",
-            "community": "Community"
-        }
-        
-        table_name = table_map[section]
         
         # Base query for all sections
         query = f"""
@@ -209,7 +199,7 @@ def view_category(section, category):
         """
         
         # Section-specific fields with proper escaping
-        if section == "for-sale":
+        if section == "ForSale":
             query += """,
                 YearBuilt as year_built,
                 MakeModel as make_model,
@@ -217,7 +207,7 @@ def view_category(section, category):
                 SubType as item_type,
                 `ItemCondition` as `condition`
             """
-        elif section == "housing":
+        elif section == "Housing":
             query += """,
                 YearBuilt as year_built,
                 Bedrooms as bedrooms,
@@ -225,27 +215,29 @@ def view_category(section, category):
                 SquareFeet as square_feet,
                 LotSize as lot_size
             """
-        elif section == "services":
+        elif section == "Services":
             query += """,
                 YearStarted as year_started,
                 Availability as availability,
                 ExperienceYears as experience_years
             """
-        elif section == "jobs":
+        elif section == "Jobs":
             query += """,
                 Title as title,
                 Availability as availability,
                 ExperienceYears as experience_years
             """
-        elif section == "community":
+        elif section == "Community":
             query += """,
                 Title as title,
                 Date as date,
                 Location as location,
-                Organizer as organizer
+                Organizer as organizer,
+                ContactInfo as phone
             """
+
             
-        query += f" FROM `{table_name}` WHERE Type=%s"
+        query += f" FROM `{section}` WHERE Type=%s"
         
         cursor.execute(query, (category,))
         items = cursor.fetchall()
@@ -268,35 +260,81 @@ def view_item(section, category, item_id):
     """Display single listing details"""
     if section not in SECTIONS or category not in SECTIONS[section]:
         abort(404)
-    
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        table_map = {
-            "for-sale": "ForSale",
-            "housing": "Housing",
-            "services": "Services",
-            "jobs": "Jobs",
-            "community": "Community"
-        }
-        table_name = table_map[section]
-        cursor.execute(f"""
-            SELECT * FROM `{table_name}` 
-            WHERE id=%s AND Type=%s
-        """, (item_id, category))
+
+        # Base SELECT
+        query = f"""
+            SELECT 
+                ID as id,
+                Type as category,
+                Description as description,
+                Price as price,
+                City as city,
+                PhoneNumber as phone
+        """
+
+        # Add section-specific fields
+        if section == "ForSale":
+            query += """,
+                YearBuilt as year_built,
+                MakeModel as make_model,
+                Color as color,
+                SubType as item_type,
+                `ItemCondition` as `condition`
+            """
+        elif section == "Housing":
+            query += """,
+                YearBuilt as year_built,
+                Bedrooms as bedrooms,
+                Bathrooms as bathrooms,
+                SquareFeet as square_feet,
+                LotSize as lot_size
+            """
+        elif section == "Services":
+            query += """,
+                YearStarted as year_started,
+                Availability as availability,
+                ExperienceYears as experience_years
+            """
+        elif section == "Jobs":
+            query += """,
+                Title as title,
+                Availability as availability,
+                ExperienceYears as experience_years
+            """
+        elif section == "Community":
+            query += """,
+                Title as title,
+                Date as date,
+                Location as location,
+                Organizer as organizer,
+                ContactInfo as phone
+            """
+
+        query += f" FROM `{section}` WHERE id=%s AND Type=%s"
+
+        cursor.execute(query, (item_id, category))
         item = cursor.fetchone()
         conn.close()
-        
+
         if not item:
             abort(404)
-            
-        return render_template('item.html', 
-                            item=item,
-                            section=section,
-                            category=category)
+
+        # Ensure 'title' is present for template
+        if 'title' not in item or not item['title']:
+            item['title'] = item.get('make_model') or item.get('description') or 'Listing'
+
+        return render_template('item.html',
+                               item=item,
+                               section=section,
+                               category=category)
     except pymysql.Error as e:
-        print(f"Database error: {e}")
+        print(f"Database error in view_item: {e}")
         abort(500)
+
 
 @app.route('/create-listing/<section>/<category>', methods=['GET', 'POST'])
 def create_listing(section, category):
