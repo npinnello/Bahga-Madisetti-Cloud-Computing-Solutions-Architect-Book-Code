@@ -31,16 +31,17 @@ def inject_sections():
 def get_db_connection():
     try:
         return pymysql.connect(
-            unix_socket=f'/cloudsql/{DB_CONNECTION_NAME}',
-            user=DB_USER,
-            password=DB_PASSWORD,
-            db=DB_NAME,
+            unix_socket='/cloudsql/coms4220final:us-central1:photo-gallery-db',
+            user='root',
+            password='se422',
+            db='photo_gallery',
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
     except pymysql.MySQLError as e:
         print(f"MySQL connection error: {e}")
         raise
+
 
 #Temp function for db connection testing
 @app.route('/db-debug')
