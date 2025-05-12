@@ -30,14 +30,26 @@ def inject_sections():
 # DB connection
 def get_db_connection():
     try:
-        return pymysql.connect(
-            host='10.19.0.3',  # Your private IP from `gcloud sql instances list`
-            user='root',
-            password='se422',
-            db='photo_gallery',
-            charset='utf8mb4',
-            cursorclass=pymysql.cursors.DictCursor
-        )
+        if os.path.exists(f"/cloudsql/{DB_CONNECTION_NAME}"):
+            # Use Unix socket if available
+            return pymysql.connect(
+                unix_socket=f"/cloudsql/{DB_CONNECTION_NAME}",
+                user=DB_USER,
+                password=DB_PASSWORD,
+                db=DB_NAME,
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor
+            )
+        else:
+            # Fallback to private IP (from `gcloud sql instances describe`)
+            return pymysql.connect(
+                host="10.19.0.3",
+                user=DB_USER,
+                password=DB_PASSWORD,
+                db=DB_NAME,
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor
+            )
     except pymysql.MySQLError as e:
         print(f"MySQL connection error: {e}")
         raise
