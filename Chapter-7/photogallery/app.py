@@ -30,26 +30,14 @@ def inject_sections():
 # DB connection
 def get_db_connection():
     try:
-        if os.name == 'nt':  # Windows
-            # Use TCP connection to Cloud SQL public IP
-            return pymysql.connect(
-                host='34.58.7.121',
-                port=3306,
-                user=DB_USER,
-                password=DB_PASSWORD,
-                db=DB_NAME,
-                charset='utf8mb4',
-                cursorclass=pymysql.cursors.DictCursor
-            )
-        else:  # Unix/Linux (Google Cloud)
-            return pymysql.connect(
-                unix_socket=f'/cloudsql/{DB_CONNECTION_NAME}',
-                user=DB_USER,
-                password=DB_PASSWORD,
-                db=DB_NAME,
-                charset='utf8mb4',
-                cursorclass=pymysql.cursors.DictCursor
-            )
+        return pymysql.connect(
+            unix_socket=f'/cloudsql/{DB_CONNECTION_NAME}',
+            user=DB_USER,
+            password=DB_PASSWORD,
+            db=DB_NAME,
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
     except pymysql.MySQLError as e:
         print(f"MySQL connection error: {e}")
         raise
