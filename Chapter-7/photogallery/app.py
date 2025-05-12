@@ -31,7 +31,7 @@ def inject_sections():
 def get_db_connection():
     try:
         return pymysql.connect(
-            unix_socket='/cloudsql/coms4220final:us-central1:photo-gallery-db',
+            host='10.19.0.3',  # Your private IP from `gcloud sql instances list`
             user='root',
             password='se422',
             db='photo_gallery',
@@ -41,6 +41,7 @@ def get_db_connection():
     except pymysql.MySQLError as e:
         print(f"MySQL connection error: {e}")
         raise
+
 
 
 #Temp function for db connection testing
