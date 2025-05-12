@@ -432,6 +432,10 @@ def create_listing(section, category):
                          category=category,
                          section_key=section_key)
 
+@app.route('/health')
+def health():
+    return "OK", 200
+
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
